@@ -26,7 +26,7 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 text-center">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-6">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full text-neutral-700 dark:text-neutral-300 text-xs font-medium mb-6">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
           <span>Introducing Git-based Showcase Platform</span>
         </div>
@@ -35,7 +35,7 @@ export default function HomePage() {
           {siteConfig.hero_headline}
         </h1>
         
-        <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mt-6 leading-relaxed">
+        <p className="text-base sm:text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto mt-6 leading-relaxed">
           {siteConfig.hero_description}
         </p>
 
@@ -65,26 +65,26 @@ export default function HomePage() {
       {/* Statistics Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-neutral-900/40 border border-neutral-850 p-6 rounded-xl backdrop-blur-md">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
             <div className="flex items-center gap-3 text-neutral-400 mb-2">
               <FolderKanban className="w-5 h-5 text-indigo-400" />
               <span className="text-sm font-medium">Showcase Projects</span>
             </div>
-            <p className="text-3xl font-bold text-white">{projectsData.length}</p>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{projectsData.length}</p>
           </div>
-          <div className="bg-neutral-900/40 border border-neutral-850 p-6 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-3 text-neutral-400 mb-2">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400 mb-2">
               <Users2 className="w-5 h-5 text-indigo-400" />
               <span className="text-sm font-medium">Active Developers</span>
             </div>
-            <p className="text-3xl font-bold text-white">{developersData.length}</p>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{developersData.length}</p>
           </div>
-          <div className="bg-neutral-900/40 border border-neutral-850 p-6 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-3 text-neutral-400 mb-2">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
+            <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400 mb-2">
               <Code2 className="w-5 h-5 text-indigo-400" />
               <span className="text-sm font-medium">Technologies catalogued</span>
             </div>
-            <p className="text-3xl font-bold text-white">{uniqueTechs.length}</p>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{uniqueTechs.length}</p>
           </div>
         </div>
       </section>
@@ -93,12 +93,12 @@ export default function HomePage() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
         <div className="flex items-end justify-between border-b border-neutral-900 pb-4">
           <div>
-            <h2 className="text-2xl font-extrabold text-white">Featured Work</h2>
-            <p className="text-sm text-neutral-500 mt-1">Hand-picked engineering projects with full source and previews.</p>
+            <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white">Featured Work</h2>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1">Hand-picked engineering projects with full source and previews.</p>
           </div>
           <Link
             href="/projects"
-            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
           >
             <span>All Projects</span>
             <ArrowRight className="w-4 h-4" />
@@ -115,14 +115,14 @@ export default function HomePage() {
       {/* Featured Developers Section */}
       {featuredDevelopers.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-          <div className="flex items-end justify-between border-b border-neutral-900 pb-4">
+          <div className="flex items-end justify-between border-b border-neutral-200 dark:border-neutral-900 pb-4">
             <div>
-              <h2 className="text-2xl font-extrabold text-white">Key Contributors</h2>
-              <p className="text-sm text-neutral-500 mt-1">The talented engineers designing and maintaining our products.</p>
+              <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white">Key Contributors</h2>
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1">The talented engineers designing and maintaining our products.</p>
             </div>
             <Link
               href="/developers"
-              className="flex items-center gap-1.5 text-sm font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
             >
               <span>Directory</span>
               <ArrowRight className="w-4 h-4" />
@@ -140,7 +140,7 @@ export default function HomePage() {
       {/* Footer Call-to-action */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-neutral-200 dark:border-neutral-900">
         <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Want to collaborate?</h3>
-        <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto text-sm mb-6">
+        <p className="text-neutral-700 dark:text-neutral-300 max-w-md mx-auto text-sm mb-6">
           Reach out if you are interested in working together, building something new, or discussing technical topics.
         </p>
         <a

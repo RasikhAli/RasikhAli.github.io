@@ -38,10 +38,10 @@ export default function TechExplorerPage() {
         
         {/* Header Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
             Technology Explorer
           </h1>
-          <p className="text-sm text-neutral-450">
+          <p className="text-sm text-neutral-700 dark:text-neutral-400">
             A visual overview of the technologies, libraries, and frameworks utilized across our project catalog.
           </p>
         </div>
@@ -56,17 +56,17 @@ export default function TechExplorerPage() {
                 onClick={() => setSelectedTech(isSelected ? null : tech.name)}
                 className={`p-5 rounded-xl border text-left transition-all duration-200 backdrop-blur-md relative ${
                   isSelected
-                    ? "bg-indigo-600/10 border-indigo-500 text-indigo-400 ring-1 ring-indigo-500/20"
-                    : "bg-neutral-900/40 border-neutral-850 text-neutral-300 hover:border-neutral-700/60 hover:text-white"
+                    ? "bg-indigo-600/10 border-indigo-500 text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-500/20"
+                    : "bg-white/90 border-neutral-200 text-neutral-800 dark:bg-neutral-900/40 dark:border-neutral-850 dark:text-neutral-300 dark:hover:border-neutral-700/60 dark:hover:text-white"
                 }`}
               >
-                <div className="flex items-center justify-between mb-3 text-neutral-400">
-                  <Code2 className={`w-5 h-5 ${isSelected ? "text-indigo-400" : "text-neutral-500"}`} />
-                  <span className="text-[10px] font-bold bg-neutral-850 px-2 py-0.5 rounded border border-neutral-800">
+                <div className="flex items-center justify-between mb-3 text-neutral-600 dark:text-neutral-400">
+                  <Code2 className={`w-5 h-5 ${isSelected ? "text-indigo-500 dark:text-indigo-400" : "text-neutral-500 dark:text-neutral-500"}`} />
+                  <span className="text-[10px] font-bold bg-neutral-100 text-neutral-700 dark:bg-neutral-850 dark:text-neutral-300 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-800">
                     {tech.count} {tech.count === 1 ? "proj" : "projs"}
                   </span>
                 </div>
-                <div className="font-semibold text-sm line-clamp-1">{tech.name}</div>
+                <div className="font-semibold text-sm text-neutral-900 dark:text-white line-clamp-1">{tech.name}</div>
               </button>
             );
           })}
@@ -74,18 +74,18 @@ export default function TechExplorerPage() {
 
         {/* Dynamic Project Filter Details */}
         {selectedTech && (
-          <div className="space-y-6 pt-8 border-t border-neutral-900 animate-in fade-in duration-300">
+          <div className="space-y-6 pt-8 border-t border-neutral-200 dark:border-neutral-900 animate-in fade-in duration-300">
             <div className="flex items-end justify-between">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                   <FolderGit className="w-5 h-5 text-indigo-400" />
                   <span>Projects using {selectedTech}</span>
                 </h2>
-                <p className="text-xs text-neutral-500 mt-1">Explore implementation details for this technology tag.</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-500 mt-1">Explore implementation details for this technology tag.</p>
               </div>
               <button
                 onClick={() => setSelectedTech(null)}
-                className="text-xs font-semibold text-neutral-500 hover:text-neutral-305 hover:underline"
+                className="text-xs font-semibold text-neutral-700 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-neutral-300 hover:underline"
               >
                 Clear Selection
               </button>

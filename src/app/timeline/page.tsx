@@ -42,10 +42,10 @@ export default function ProjectsTimelinePage() {
         
         {/* Header Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
             Project Timeline
           </h1>
-          <p className="text-sm text-neutral-450">
+          <p className="text-sm text-neutral-700 dark:text-neutral-400">
             A chronological timeline of project launch dates, ongoing maintenance, and future plans.
           </p>
         </div>
@@ -62,18 +62,18 @@ export default function ProjectsTimelinePage() {
 
               {/* Date Block Left of Timeline (only visible on medium-and-above devices) */}
               <div className="hidden md:block absolute -left-44 top-1 w-32 text-right">
-                <span className="text-xs font-bold text-neutral-450 uppercase tracking-wider block">
+                <span className="text-xs font-bold text-neutral-700 dark:text-neutral-400 uppercase tracking-wider block">
                   {formatDate(project.start_date)}
                 </span>
-                <span className="text-[10px] text-neutral-500 block mt-0.5">
+                <span className="text-[10px] text-neutral-600 dark:text-neutral-500 block mt-0.5">
                   to {formatDate(project.end_date)}
                 </span>
               </div>
 
               {/* Content Card */}
-              <div className="p-6 bg-neutral-900/40 border border-neutral-850 rounded-xl backdrop-blur-md group-hover:border-neutral-700/60 transition-all space-y-3 relative">
+              <div className="p-6 bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 rounded-xl backdrop-blur-md group-hover:border-neutral-300 dark:group-hover:border-neutral-700/60 transition-all space-y-3 relative">
                 {/* Mobiles Only date block display */}
-                <div className="md:hidden flex items-center gap-1.5 text-xs font-bold text-neutral-455 uppercase tracking-wider mb-2">
+                <div className="md:hidden flex items-center gap-1.5 text-xs font-bold text-neutral-700 dark:text-neutral-400 uppercase tracking-wider mb-2">
                   <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                   <span>
                     {formatDate(project.start_date)} – {formatDate(project.end_date)}
@@ -82,13 +82,13 @@ export default function ProjectsTimelinePage() {
 
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors flex items-center gap-1.5">
+                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1.5">
                       <Link href={`/projects/${project.id}`}>
                         {project.title}
                       </Link>
                       <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-indigo-400" />
                     </h3>
-                    <p className="text-sm text-neutral-400 mt-1">{project.short_description}</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-400 mt-1">{project.short_description}</p>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(project.status)}`}>
                     {project.status.replace("_", " ").toUpperCase()}
@@ -100,7 +100,7 @@ export default function ProjectsTimelinePage() {
                   {project.tech_stack.map((tech) => (
                     <span
                       key={tech}
-                      className="text-[10px] font-medium bg-neutral-850 text-neutral-400 px-2 py-0.5 rounded border border-neutral-800"
+                      className="text-[10px] font-medium bg-neutral-100 text-neutral-700 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-800"
                     >
                       {tech}
                     </span>

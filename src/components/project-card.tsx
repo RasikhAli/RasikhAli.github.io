@@ -24,13 +24,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20";
       case "in_progress":
-        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        return "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20";
       case "planned":
-        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+        return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20";
       default:
-        return "bg-neutral-500/10 text-neutral-400 border-neutral-500/20";
+        return "bg-neutral-500/10 text-neutral-700 dark:text-neutral-400 border-neutral-500/20";
     }
   };
 
@@ -76,13 +76,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {project.tech_stack.slice(0, 3).map((tech) => (
               <span
                 key={tech}
-                className="text-[10px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800"
+                className="text-[10px] font-medium bg-neutral-100 text-neutral-700 dark:bg-neutral-850 dark:text-neutral-300 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800"
               >
                 {tech}
               </span>
             ))}
             {project.tech_stack.length > 3 && (
-              <span className="text-[10px] font-medium bg-neutral-100 text-neutral-500 dark:bg-neutral-850 dark:text-neutral-500 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800">
+              <span className="text-[10px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800">
                 +{project.tech_stack.length - 3} more
               </span>
             )}
@@ -97,7 +97,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
               </Link>
               <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 text-indigo-400" />
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 line-clamp-2">
+            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-2 line-clamp-2">
               {project.short_description}
             </p>
           </div>
@@ -113,19 +113,19 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 src={dev.avatar}
                 alt={dev.name}
                 title={dev.name}
-                className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-neutral-900 object-cover"
+                className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-neutral-200 dark:ring-neutral-900 object-cover"
               />
             ))}
           </div>
 
           {/* Action Links */}
-          <div className="flex items-center gap-3 relative z-10 text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center gap-3 relative z-10 text-neutral-700 dark:text-neutral-300">
             {project.github_repo_url && (
               <a
                 href={project.github_repo_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
                 title="View Repository"
               >
                 <Github className="w-4 h-4" />
@@ -136,7 +136,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 href={project.live_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-white transition-colors"
+                className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
                 title="Live Demonstration"
               >
                 <ExternalLink className="w-4 h-4" />

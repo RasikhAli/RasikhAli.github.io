@@ -26,7 +26,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
           <img
             src={developer.avatar}
             alt={developer.name}
-            className="w-14 h-14 rounded-full object-cover ring-2 ring-neutral-800"
+            className="w-14 h-14 rounded-full object-cover ring-2 ring-neutral-200 dark:ring-neutral-800"
           />
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -34,7 +34,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
                 {developer.name}
               </Link>
             </h3>
-            <p className="text-xs text-indigo-400 font-medium">{developer.designation}</p>
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">{developer.designation}</p>
           </div>
         </div>
 
@@ -54,7 +54,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
             </span>
           ))}
           {developer.skills.length > 4 && (
-            <span className="text-[10px] font-medium bg-neutral-850 text-neutral-500 px-2 py-0.5 rounded border border-neutral-850">
+            <span className="text-[10px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-850 dark:text-neutral-500 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-850">
               +{developer.skills.length - 4}
             </span>
           )}
@@ -62,14 +62,14 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
       </div>
 
       {/* Footer / Socials / Action */}
-      <div className="flex items-center justify-between border-t border-neutral-800/80 pt-4 mt-6">
-        <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
+      <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800/80 pt-4 mt-6">
+        <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400">
           {developer.github_url && (
             <a
               href={developer.github_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
               title="GitHub Profile"
             >
               <Github className="w-4 h-4" />
@@ -80,7 +80,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
               href={developer.linkedin_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-white transition-colors"
+              className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
               title="LinkedIn Profile"
             >
               <Linkedin className="w-4 h-4" />
@@ -89,7 +89,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
           {developer.email && (
             <a
               href={`mailto:${developer.email}`}
-              className="hover:text-white transition-colors"
+              className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
               title="Send Email"
             >
               <Mail className="w-4 h-4" />

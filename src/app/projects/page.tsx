@@ -100,7 +100,7 @@ export default function ProjectsGridPage() {
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
             Project Showcase
           </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-neutral-700 dark:text-neutral-300">
             Explore our engineering milestones, side projects, and open-source contributions.
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function ProjectsGridPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Input */}
             <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 dark:text-neutral-500" />
               <input
                 type="text"
                 placeholder="Search by title, stack, description..."
@@ -151,7 +151,7 @@ export default function ProjectsGridPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 rounded-xl backdrop-blur-md animate-in slide-in-from-top-4 duration-200">
               {/* Developer Filter */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-500 dark:text-neutral-450 uppercase tracking-wider">Developer</label>
+                <label className="text-xs font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider">Developer</label>
                 <select
                   value={selectedDeveloper}
                   onChange={(e) => setSelectedDeveloper(e.target.value)}
@@ -238,9 +238,9 @@ export default function ProjectsGridPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 border border-dashed border-neutral-200 dark:border-neutral-850 rounded-xl bg-neutral-100/70 dark:bg-neutral-900/10">
-            <AlertCircle className="w-10 h-10 text-neutral-500 mb-4" />
+            <AlertCircle className="w-10 h-10 text-neutral-400 dark:text-neutral-500 mb-4" />
             <h3 className="text-base font-bold text-neutral-800 dark:text-neutral-350">No projects found</h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-500 mt-1 max-w-sm text-center">
+            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1 max-w-sm text-center">
               Try adjusting your text search, resetting filters, or refining your query tags.
             </p>
             <button
