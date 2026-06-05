@@ -1,0 +1,19 @@
+{
+  "site_title": "Rasikh Ali | Portfolio CMS",
+  "site_subtitle": "Developer Showcase & Git-Based CMS",
+  "hero_headline": "Crafting premium web experiences and robust systems",
+  "hero_description": "Welcome to my portfolio CMS. Explore projects, meet the developers, and manage content seamlessly with a Git-based workflow.",
+  "portfolio_owner_name": "Rasikh Ali",
+  "resume_url": "https://rasikhali.github.io/resume.pdf",
+  "contact_email": "rasikhali@example.com",
+  "github_url": "https://github.com/RasikhAli",
+  "linkedin_url": "https://linkedin.com/in/RasikhAli",
+  "twitter_url": "https://twitter.com/RasikhAli",
+  "footer_content": "© 2026 Rasikh Ali. All rights reserved. Built with Next.js & Tailwind CSS.",
+  "seo_defaults": {
+    "title": "Rasikh Ali | Portfolio CMS",
+    "description": "Premium developer portfolio and Git-based CMS showcase platform.",
+    "og_image": "https://rasikhali.github.io/og-image.jpg",
+    "keywords": ["Developer", "Portfolio", "Next.js", "React", "TypeScript", "Git-based CMS"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Rasikh Ali | Portfolio CMS & Showcase",
+  "short_name": "Portfolio CMS",
+  "description": "Premium developer portfolio CMS and showcase platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030712",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://avatars.githubusercontent.com/u/101859174?v=4",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://avatars.githubusercontent.com/u/101859174?v=4",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
