@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Octokit } from "octokit";
 import { Developer, Project, SiteConfig } from "@/lib/schemas";
 import { commitFileToGitHub, uploadImageToGitHub } from "@/lib/github";
 
@@ -11,6 +12,7 @@ export function useGitHub() {
   const [branch, setBranch] = useState<string>("main");
   const [isClientMode, setIsClientMode] = useState<boolean>(true);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [statusMessage, setStatusMessage] = useState<string>("Saving changes...");
   const [errorMsg, setErrorMsg] = useState<string>("");
 
   useEffect(() => {
@@ -54,8 +56,66 @@ export function useGitHub() {
     localStorage.removeItem("github_pat");
   }, []);
 
+  const waitForDeploymentCompletion = async () => {
+    const startedAt = Date.now();
+    const timeoutMs = 10 * 60 * 1000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+      try {
+        if (isClientMode) {
+          const octokit = new Octokit({ auth: token });
+          const runs = await octokit.rest.actions.listWorkflowRuns({
+            owner: repoOwner,
+            repo: repoName,
+            workflow_id: "deploy.yml",
+            branch,
+            per_page: 5,
+          });
+          const latestRun = runs.data.workflow_runs.find((run) => run.path?.includes("deploy.yml")) || runs.data.workflow_runs[0];
+
+          if (!latestRun) {
+            return;
+          }
+
+          const run = await octokit.rest.actions.getWorkflowRun({
+            owner: repoOwner,
+            repo: repoName,
+            run_id: latestRun.id,
+          });
+
+          if (run.data.status === "completed") {
+            if (run.data.conclusion === "failure") {
+              throw new Error("GitHub Pages deployment failed. Please check the Actions logs.");
+            }
+            return;
+          }
+        } else {
+          const res = await fetch("/api/deploy/status", { method: "GET" });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "Unable to verify deployment status.");
+          }
+          const data = await res.json();
+          if (data.status === "completed") {
+            if (data.conclusion === "failure") {
+              throw new Error("GitHub Pages deployment failed. Please check the Actions logs.");
+            }
+            return;
+          }
+        }
+      } catch (err: any) {
+        console.warn("Polling deployment status failed:", err);
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 8000));
+    }
+
+    throw new Error("Deployment is taking longer than expected. Please wait a moment and refresh the page.");
+  };
+
   const executeCommit = async (path: string, newContent: string, message: string) => {
     setStatus("loading");
+    setStatusMessage("Saving changes and preparing deployment...");
     setErrorMsg("");
     try {
       if (isClientMode) {
@@ -83,11 +143,15 @@ export function useGitHub() {
           throw new Error(errData.error || "Failed to commit changes to GitHub server.");
         }
       }
+      setStatusMessage("Publishing update to GitHub Pages...");
+      await waitForDeploymentCompletion();
       setStatus("success");
+      setStatusMessage("Update published successfully.");
       return true;
     } catch (err: any) {
       console.error(err);
       setStatus("error");
+      setStatusMessage("Update failed.");
       setErrorMsg(err.message || "An error occurred while committing to GitHub");
       return false;
     }
@@ -154,6 +218,7 @@ export function useGitHub() {
     branch,
     isClientMode,
     status,
+    statusMessage,
     errorMsg,
     saveConfig,
     clearConfig,

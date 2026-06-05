@@ -11,8 +11,12 @@ import { useGitHub } from "@/hooks/use-github";
 import initialProjects from "../../../../data/projects.json";
 import developersData from "../../../../data/developers.json";
 
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 export default function AdminProjectsPage() {
-  const { updateProjectsList, uploadFile, status, errorMsg } = useGitHub();
+  const { updateProjectsList, uploadFile, status, statusMessage, errorMsg } = useGitHub();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -34,10 +38,37 @@ export default function AdminProjectsPage() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<Project>({
     resolver: zodResolver(projectSchema),
   });
+
+  const watchedTitle = watch("title");
+  const watchedId = watch("id");
+  const watchedRepoUrl = watch("github_repo_url");
+
+  useEffect(() => {
+    if (!editingProject && watchedTitle && !watchedId) {
+      setValue("id", slugify(watchedTitle));
+    }
+  }, [watchedTitle, watchedId, editingProject, setValue]);
+
+  const autoFillRepo = async (sourceUrl?: string) => {
+    const repoUrl = sourceUrl || watchedRepoUrl;
+    if (!repoUrl) return;
+
+    try {
+      const res = await fetch(`/api/github/metadata?url=${encodeURIComponent(repoUrl)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch repository metadata.");
+      if (!watch("description") && data.description) setValue("description", data.description);
+      if (!watch("short_description") && data.short_description) setValue("short_description", data.short_description);
+      if (!watch("tech_stack")?.length && data.tech_stack?.length) setValue("tech_stack", data.tech_stack);
+    } catch (error: any) {
+      alert(error.message || "Unable to fetch repository details right now.");
+    }
+  };
 
   const openCreateForm = () => {
     setEditingProject(null);
@@ -229,6 +260,10 @@ export default function AdminProjectsPage() {
                     <input
                       type="text"
                       {...register("title")}
+                      onBlur={(e) => {
+                        register("title").onBlur(e);
+                        if (!watch("id")) setValue("id", slugify(e.target.value));
+                      }}
                       placeholder="My Streaming App"
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
                     />
@@ -311,6 +346,10 @@ export default function AdminProjectsPage() {
                     <input
                       type="text"
                       {...register("github_repo_url")}
+                      onBlur={(e) => {
+                        register("github_repo_url").onBlur(e);
+                        if (e.target.value) autoFillRepo(e.target.value);
+                      }}
                       placeholder="https://..."
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
                     />
@@ -357,6 +396,8 @@ export default function AdminProjectsPage() {
                     })}
                   </div>
                 </div>
+
+                <p className="text-[11px] text-neutral-500">Tip: a GitHub repository URL auto-fills the description, short summary, and tech stack when available. The ID is generated from the title if left blank.</p>
 
                 {/* Tech stack tags */}
                 <div>
@@ -429,6 +470,16 @@ export default function AdminProjectsPage() {
 
               </form>
 
+            </div>
+          </div>
+        )}
+
+        {status === "loading" && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
+              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
+              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
+              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
             </div>
           </div>
         )}

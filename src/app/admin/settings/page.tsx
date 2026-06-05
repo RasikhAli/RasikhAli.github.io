@@ -12,7 +12,7 @@ import siteConfigData from "../../../../data/site-config.json";
 
 export default function AdminSettingsPage() {
   const router = useRouter();
-  const { updateSiteConfig, status, errorMsg, token } = useGitHub();
+  const { updateSiteConfig, status, statusMessage, errorMsg } = useGitHub();
   const [successMsg, setSuccessMsg] = useState("");
   const [isClient, setIsClient] = useState(false);
 
@@ -94,6 +94,16 @@ export default function AdminSettingsPage() {
           <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4" />
             <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {status === "loading" && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
+              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
+              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
+              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
+            </div>
           </div>
         )}
 

@@ -9,8 +9,12 @@ import { developerSchema, Developer } from "@/lib/schemas";
 import { useGitHub } from "@/hooks/use-github";
 import initialDevelopers from "../../../../data/developers.json";
 
+function slugify(value: string) {
+  return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
 export default function AdminDevelopersPage() {
-  const { updateDevelopersList, status, errorMsg } = useGitHub();
+  const { updateDevelopersList, status, statusMessage, errorMsg } = useGitHub();
   
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [editingDev, setEditingDev] = useState<Developer | null>(null);
@@ -29,10 +33,41 @@ export default function AdminDevelopersPage() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<Developer>({
     resolver: zodResolver(developerSchema),
   });
+
+  const watchedName = watch("name");
+  const watchedId = watch("id");
+  const watchedGitHub = watch("github_url");
+  const watchedLinkedIn = watch("linkedin_url");
+
+  useEffect(() => {
+    if (!editingDev && watchedName && !watchedId) {
+      setValue("id", slugify(watchedName));
+    }
+  }, [watchedName, watchedId, editingDev, setValue]);
+
+  const autoFillProfile = async (sourceUrl?: string) => {
+    const urlToUse = sourceUrl || watchedGitHub || watchedLinkedIn;
+    if (!urlToUse) return;
+
+    try {
+      const res = await fetch(`/api/github/metadata?url=${encodeURIComponent(urlToUse)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch profile metadata.");
+
+      if (!watch("avatar") && data.avatar) setValue("avatar", data.avatar);
+      if (!watch("bio") && data.bio) setValue("bio", data.bio);
+      if (!watch("name") && data.name) setValue("name", data.name);
+      if (!watch("skills")?.length && data.skills?.length) setValue("skills", data.skills);
+      if (!watch("id") && data.name) setValue("id", slugify(data.name));
+    } catch (error: any) {
+      alert(error.message || "Unable to fetch profile details right now.");
+    }
+  };
 
   const openCreateForm = () => {
     setEditingDev(null);
@@ -195,6 +230,10 @@ export default function AdminDevelopersPage() {
                     <input
                       type="text"
                       {...register("name")}
+                      onBlur={(e) => {
+                        register("name").onBlur(e);
+                        if (!watch("id")) setValue("id", slugify(e.target.value));
+                      }}
                       placeholder="John Doe"
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
                     />
@@ -257,6 +296,10 @@ export default function AdminDevelopersPage() {
                     <input
                       type="text"
                       {...register("github_url")}
+                      onBlur={(e) => {
+                        register("github_url").onBlur(e);
+                        if (e.target.value) autoFillProfile(e.target.value);
+                      }}
                       placeholder="https://github.com/username"
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
                     />
@@ -270,6 +313,10 @@ export default function AdminDevelopersPage() {
                     <input
                       type="text"
                       {...register("linkedin_url")}
+                      onBlur={(e) => {
+                        register("linkedin_url").onBlur(e);
+                        if (e.target.value) autoFillProfile(e.target.value);
+                      }}
                       placeholder="https://linkedin.com/in/username"
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-355 focus:outline-none focus:border-indigo-500"
                     />
@@ -287,6 +334,8 @@ export default function AdminDevelopersPage() {
                     {errors.portfolio_url && <p className="text-xs text-red-500 mt-1">{errors.portfolio_url.message}</p>}
                   </div>
                 </div>
+
+                <p className="text-[11px] text-neutral-500">Tip: GitHub or LinkedIn links auto-fill avatar, bio, and skills when available. Unique ID is generated from the name if you leave it blank.</p>
 
                 {/* Skills tags selection */}
                 <div>
@@ -348,6 +397,16 @@ export default function AdminDevelopersPage() {
 
               </form>
 
+            </div>
+          </div>
+        )}
+
+        {status === "loading" && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
+              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
+              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
+              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
             </div>
           </div>
         )}
