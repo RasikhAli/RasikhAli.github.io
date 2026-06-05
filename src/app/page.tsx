@@ -19,23 +19,23 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-white selection:bg-indigo-500/30">
       
       {/* Glow Backdrop Accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] -z-10 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08),transparent_50%)] pointer-events-none" />
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 text-center">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-900 border border-neutral-800 rounded-full text-neutral-400 text-xs font-medium mb-6">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-6">
           <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
           <span>Introducing Git-based Showcase Platform</span>
         </div>
         
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-b from-white to-neutral-400 bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
+        <h1 className="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-b from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
           {siteConfig.hero_headline}
         </h1>
         
-        <p className="text-base sm:text-lg text-neutral-400 max-w-2xl mx-auto mt-6 leading-relaxed">
+        <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mt-6 leading-relaxed">
           {siteConfig.hero_description}
         </p>
 
@@ -53,7 +53,7 @@ export default function HomePage() {
               href={siteConfig.resume_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 bg-neutral-900 border border-neutral-800 hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-all text-neutral-300 hover:text-white"
+              className="flex items-center gap-2 px-6 py-3 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-all text-neutral-700 dark:text-neutral-300 dark:hover:text-white"
             >
               <FileText className="w-4 h-4" />
               <span>View Resume</span>
@@ -138,14 +138,14 @@ export default function HomePage() {
       )}
 
       {/* Footer Call-to-action */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-neutral-900">
-        <h3 className="text-xl font-bold text-white mb-3">Want to collaborate?</h3>
-        <p className="text-neutral-400 max-w-md mx-auto text-sm mb-6">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-neutral-200 dark:border-neutral-900">
+        <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Want to collaborate?</h3>
+        <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto text-sm mb-6">
           Reach out if you are interested in working together, building something new, or discussing technical topics.
         </p>
         <a
           href={`mailto:${siteConfig.contact_email}`}
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-900 hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-colors border border-neutral-800 text-neutral-200 hover:text-white"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-colors border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 dark:hover:text-white"
         >
           <span>Contact Me</span>
           <ArrowUpRight className="w-4 h-4" />

@@ -18,7 +18,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className="group relative flex flex-col justify-between bg-neutral-900/40 border border-neutral-800 rounded-xl p-6 backdrop-blur-md hover:border-neutral-700/80 transition-colors"
+      className="group relative flex flex-col justify-between bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-800 rounded-xl p-6 backdrop-blur-md hover:border-neutral-300 dark:hover:border-neutral-700/80 transition-colors"
     >
       <div className="space-y-4">
         {/* Profile Header */}
@@ -29,7 +29,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
             className="w-14 h-14 rounded-full object-cover ring-2 ring-neutral-800"
           />
           <div>
-            <h3 className="text-base font-bold text-white group-hover:text-indigo-400 transition-colors">
+            <h3 className="text-base font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               <Link href={`/developers/${developer.id}`}>
                 {developer.name}
               </Link>
@@ -39,7 +39,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
         </div>
 
         {/* Short Bio */}
-        <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed">
           {developer.bio}
         </p>
 
@@ -48,7 +48,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
           {developer.skills.slice(0, 4).map((skill) => (
             <span
               key={skill}
-              className="text-[10px] font-medium bg-neutral-850 text-neutral-400 px-2 py-0.5 rounded border border-neutral-850"
+              className="text-[10px] font-medium bg-neutral-100 text-neutral-700 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-850"
             >
               {skill}
             </span>
@@ -63,7 +63,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
 
       {/* Footer / Socials / Action */}
       <div className="flex items-center justify-between border-t border-neutral-800/80 pt-4 mt-6">
-        <div className="flex items-center gap-3 text-neutral-400">
+        <div className="flex items-center gap-3 text-neutral-500 dark:text-neutral-400">
           {developer.github_url && (
             <a
               href={developer.github_url}
@@ -99,7 +99,7 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
 
         <Link
           href={`/developers/${developer.id}`}
-          className="flex items-center gap-1 text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+          className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
         >
           <span>View Profile</span>
           <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />

@@ -49,7 +49,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -6 }}
       transition={{ duration: 0.3 }}
-      className="group relative flex flex-col h-full bg-neutral-900/40 border border-neutral-800 rounded-xl overflow-hidden backdrop-blur-md hover:border-neutral-700/80 transition-colors"
+      className="group relative flex flex-col h-full bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-800 rounded-xl overflow-hidden backdrop-blur-md hover:border-neutral-300 dark:hover:border-neutral-700/80 transition-colors"
     >
       {/* Dynamic glow decoration */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-indigo-500/0 via-indigo-500/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -76,13 +76,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
             {project.tech_stack.slice(0, 3).map((tech) => (
               <span
                 key={tech}
-                className="text-[10px] font-medium bg-neutral-850 text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-800"
+                className="text-[10px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800"
               >
                 {tech}
               </span>
             ))}
             {project.tech_stack.length > 3 && (
-              <span className="text-[10px] font-medium bg-neutral-850 text-neutral-500 px-2 py-0.5 rounded-full border border-neutral-800">
+              <span className="text-[10px] font-medium bg-neutral-100 text-neutral-500 dark:bg-neutral-850 dark:text-neutral-500 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800">
                 +{project.tech_stack.length - 3} more
               </span>
             )}
@@ -90,21 +90,21 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
           {/* Project Details */}
           <div>
-            <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors flex items-center gap-1">
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1">
               <Link href={`/projects/${project.id}`} className="focus:outline-none">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {project.title}
               </Link>
               <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 text-indigo-400" />
             </h3>
-            <p className="text-sm text-neutral-400 mt-2 line-clamp-2">
+            <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2 line-clamp-2">
               {project.short_description}
             </p>
           </div>
         </div>
 
         {/* Footer Section */}
-        <div className="flex items-center justify-between border-t border-neutral-800/80 pt-4 mt-4">
+          <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800/80 pt-4 mt-4">
           {/* Assigned Developer Avatars */}
           <div className="flex -space-x-2 overflow-hidden">
             {assignedDevs.map((dev) => (
@@ -119,7 +119,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           {/* Action Links */}
-          <div className="flex items-center gap-3 relative z-10 text-neutral-400">
+          <div className="flex items-center gap-3 relative z-10 text-neutral-500 dark:text-neutral-400">
             {project.github_repo_url && (
               <a
                 href={project.github_repo_url}

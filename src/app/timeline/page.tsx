@@ -37,7 +37,7 @@ export default function ProjectsTimelinePage() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-white py-16 selection:bg-indigo-500/30">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         
         {/* Header Title */}

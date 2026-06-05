@@ -43,17 +43,12 @@ export function ThemeProvider({
 
   useEffect(() => {
     const root = window.document.documentElement;
+    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    const resolvedTheme = theme === "system" ? systemTheme : theme;
+
     root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
+    root.classList.add(resolvedTheme);
+    root.style.colorScheme = resolvedTheme;
   }, [theme]);
 
   const value = {
