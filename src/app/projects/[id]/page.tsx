@@ -1,8 +1,6 @@
 import projectsData from "@data/projects.json";
 import { ProjectDetailsClient } from "./client";
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return projectsData.map((project) => ({ id: project.id }));
 }

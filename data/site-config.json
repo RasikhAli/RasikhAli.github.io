@@ -10,6 +10,16 @@
   "linkedin_url": "https://linkedin.com/in/RasikhAli",
   "twitter_url": "https://twitter.com/RasikhAli",
   "footer_content": "© 2026 Rasikh Ali. All rights reserved. Built with Next.js & Tailwind CSS.",
+  "profile_bio": "Gold Medalist | Software Engineer | Building scalable and impactful applications",
+  "profile_typing_lines": [
+    "Gold Medalist | Software Engineer",
+    "Machine Learning Engineer | Python Developer",
+    "Flask & AI Solutions Specialist",
+    "Researcher in NLP & Intelligent Systems",
+    "Building Scalable and Impactful Applications",
+    "Exploring LLMs, RAG Systems & AI Agents"
+  ],
+  "github_username": "RasikhAli",
   "seo_defaults": {
     "title": "Rasikh Ali | Portfolio CMS",
     "description": "Premium developer portfolio and Git-based CMS showcase platform.",

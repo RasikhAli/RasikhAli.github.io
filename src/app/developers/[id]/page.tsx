@@ -1,8 +1,6 @@
 import developersData from "@data/developers.json";
 import { DeveloperPageClient } from "./client";
 
-export const dynamicParams = false;
-
 export async function generateStaticParams() {
   return developersData.map((dev) => ({ id: dev.id }));
 }

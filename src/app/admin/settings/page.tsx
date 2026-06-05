@@ -241,6 +241,46 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
+          {/* Section: Profile Customization */}
+          <div className="space-y-5 pt-4">
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
+              Profile Customization
+            </h3>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Profile Bio</label>
+                <textarea
+                  rows={3}
+                  {...register("profile_bio")}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                />
+                {errors.profile_bio && <p className="text-xs text-red-500 mt-1">{errors.profile_bio.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">GitHub Username (for stats embeds)</label>
+                <input
+                  type="text"
+                  {...register("github_username")}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                />
+                {errors.github_username && <p className="text-xs text-red-500 mt-1">{errors.github_username.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Typing Animation Lines (comma separated)</label>
+                <input
+                  type="text"
+                  defaultValue={((siteConfigData as any).profile_typing_lines || []).join(", ")}
+                  onChange={(e) => setValue("profile_typing_lines", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                />
+                <p className="text-xs text-neutral-600 mt-1">Each line will cycle in the typing animation on the homepage.</p>
+              </div>
+            </div>
+          </div>
+
           {/* Section: SEO Defaults */}
           <div className="space-y-5 pt-4">
             <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">

@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Code2, FolderKanban, Users2, Sparkles, FileText, ArrowUpRight } from "lucide-react";
+import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, ChevronDown } from "lucide-react";
+import { Github, Linkedin, Twitter } from "@/components/brand-icons";
 import { ProjectCard } from "@/components/project-card";
 import { DeveloperCard } from "@/components/developer-card";
 import siteConfig from "../../data/site-config.json";
@@ -10,110 +11,192 @@ import developersData from "../../data/developers.json";
 import projectsData from "../../data/projects.json";
 
 export default function HomePage() {
+  const [copied, setCopied] = useState(false);
   const featuredProjects = projectsData.filter((p) => p.featured);
   const featuredDevelopers = developersData.filter((d) => d.featured);
+  const uniqueTechs = Array.from(new Set(projectsData.flatMap((p) => p.tech_stack)));
+  const owner = developersData.find((d) => d.name === siteConfig.portfolio_owner_name) || developersData[0];
 
-  // Extract all unique technologies across all projects
-  const uniqueTechs = Array.from(
-    new Set(projectsData.flatMap((p) => p.tech_stack))
-  );
+  const handleCopyEmail = () => {
+    if (siteConfig.contact_email) {
+      navigator.clipboard.writeText(siteConfig.contact_email);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const socialLinks = [
+    { href: siteConfig.github_url, icon: Github, label: "GitHub", show: !!siteConfig.github_url },
+    { href: siteConfig.linkedin_url, icon: Linkedin, label: "LinkedIn", show: !!siteConfig.linkedin_url },
+    { href: siteConfig.twitter_url, icon: Twitter, label: "Twitter", show: !!siteConfig.twitter_url },
+    { href: `mailto:${siteConfig.contact_email}`, icon: Mail, label: "Email", show: !!siteConfig.contact_email },
+  ].filter((l) => l.show);
+
+  const typingLines = siteConfig.profile_typing_lines || [];
+  const displayName = owner?.name || siteConfig.portfolio_owner_name;
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-white selection:bg-indigo-500/30">
-      
-      {/* Glow Backdrop Accent */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] -z-10 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.08),transparent_50%)] pointer-events-none" />
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 text-center">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full text-neutral-700 dark:text-neutral-300 text-xs font-medium mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-          <span>Introducing Git-based Showcase Platform</span>
-        </div>
-        
-        <h1 className="text-4xl sm:text-6xl font-black tracking-tight bg-gradient-to-b from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent max-w-4xl mx-auto leading-tight">
-          {siteConfig.hero_headline}
-        </h1>
-        
-        <p className="text-base sm:text-lg text-neutral-700 dark:text-neutral-300 max-w-2xl mx-auto mt-6 leading-relaxed">
-          {siteConfig.hero_description}
-        </p>
+      {/* Profile Header */}
+      <header className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 text-center">
+        {owner?.avatar && (
+          <img
+            src={owner.avatar}
+            alt={displayName}
+            className="w-28 h-28 rounded-full object-cover ring-4 ring-neutral-200 dark:ring-neutral-800 shadow-xl mx-auto mb-6"
+          />
+        )}
 
-        <div className="flex flex-wrap items-center justify-center gap-4 mt-10">
-          <Link
-            href="/projects"
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg shadow-lg shadow-indigo-600/10 hover:shadow-indigo-500/20 transition-all"
-          >
-            <span>Explore Projects</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          
+        <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-b from-neutral-900 to-neutral-500 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
+          {displayName}
+        </h1>
+
+        {owner?.designation && (
+          <p className="text-base sm:text-lg text-indigo-600 dark:text-indigo-400 font-semibold mt-3">
+            {owner.designation}
+          </p>
+        )}
+
+        {siteConfig.profile_bio && (
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-4 max-w-2xl mx-auto leading-relaxed">
+            {siteConfig.profile_bio}
+          </p>
+        )}
+
+        {typingLines.length > 0 && (
+          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-full">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
+            </span>
+            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{typingLines[0]}</span>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+          {socialLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 rounded-lg text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+            >
+              <link.icon className="w-4 h-4" />
+              <span>{link.label}</span>
+            </a>
+          ))}
           {siteConfig.resume_url && (
             <a
               href={siteConfig.resume_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-6 py-3 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 dark:hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-all text-neutral-700 dark:text-neutral-300 dark:hover:text-white"
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 rounded-lg text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
             >
-              <FileText className="w-4 h-4" />
-              <span>View Resume</span>
+              <ExternalLink className="w-4 h-4" />
+              <span>Resume</span>
             </a>
           )}
+          {siteConfig.contact_email && (
+            <button
+              onClick={handleCopyEmail}
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 rounded-lg text-sm font-semibold text-neutral-700 dark:text-neutral-300 hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all"
+            >
+              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Mail className="w-4 h-4" />}
+              <span>{copied ? "Copied!" : "Copy Email"}</span>
+            </button>
+          )}
         </div>
-      </section>
+      </header>
 
-      {/* Statistics Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-3 text-neutral-400 mb-2">
+      {/* Stats Row */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-5 rounded-xl backdrop-blur-md text-center">
+            <div className="flex items-center justify-center gap-2 text-neutral-400 mb-2">
               <FolderKanban className="w-5 h-5 text-indigo-400" />
-              <span className="text-sm font-medium">Showcase Projects</span>
             </div>
             <p className="text-3xl font-bold text-neutral-900 dark:text-white">{projectsData.length}</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Projects</p>
           </div>
-          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400 mb-2">
-              <Users2 className="w-5 h-5 text-indigo-400" />
-              <span className="text-sm font-medium">Active Developers</span>
-            </div>
-            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{developersData.length}</p>
-          </div>
-          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
-            <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400 mb-2">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-5 rounded-xl backdrop-blur-md text-center">
+            <div className="flex items-center justify-center gap-2 text-neutral-400 mb-2">
               <Code2 className="w-5 h-5 text-indigo-400" />
-              <span className="text-sm font-medium">Technologies catalogued</span>
             </div>
             <p className="text-3xl font-bold text-neutral-900 dark:text-white">{uniqueTechs.length}</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Technologies</p>
+          </div>
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-5 rounded-xl backdrop-blur-md text-center">
+            <div className="flex items-center justify-center gap-2 text-neutral-400 mb-2">
+              <Users2 className="w-5 h-5 text-indigo-400" />
+            </div>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{developersData.length}</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">Contributors</p>
+          </div>
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-5 rounded-xl backdrop-blur-md text-center">
+            <div className="flex items-center justify-center gap-2 text-neutral-400 mb-2">
+              <Github className="w-5 h-5 text-indigo-400" />
+            </div>
+            <p className="text-3xl font-bold text-neutral-900 dark:text-white">{siteConfig.github_username || "—"}</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">GitHub</p>
           </div>
         </div>
       </section>
 
-      {/* Featured Projects Grid */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
-        <div className="flex items-end justify-between border-b border-neutral-900 pb-4">
-          <div>
-            <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white">Featured Work</h2>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1">Hand-picked engineering projects with full source and previews.</p>
+      {/* GitHub Stats Embed (optional) */}
+      {siteConfig.github_username && (
+        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-850 p-6 rounded-xl backdrop-blur-md">
+            <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-4">GitHub Analytics</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <img
+                src={`https://github-readme-stats.vercel.app/api?username=${siteConfig.github_username}&show_icons=true&theme=algolia&hide_border=true&count_private=true`}
+                alt="GitHub stats"
+                className="w-full rounded-lg"
+              />
+              <img
+                src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${siteConfig.github_username}&layout=compact&theme=algolia&hide_border=true`}
+                alt="Top languages"
+                className="w-full rounded-lg"
+              />
+            </div>
+            <img
+              src={`https://github-readme-streak-stats.herokuapp.com/?user=${siteConfig.github_username}&theme=algolia&hide_border=true`}
+              alt="Contribution streak"
+              className="w-full mt-4 rounded-lg"
+            />
           </div>
-          <Link
-            href="/projects"
-            className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
-          >
-            <span>All Projects</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        </section>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {featuredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
-          ))}
-        </div>
-      </section>
+      {/* Featured Projects */}
+      {featuredProjects.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
+          <div className="flex items-end justify-between border-b border-neutral-900 pb-4">
+            <div>
+              <h2 className="text-2xl font-extrabold text-neutral-900 dark:text-white">Featured Work</h2>
+              <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1">Hand-picked engineering projects with full source and previews.</p>
+            </div>
+            <Link
+              href="/projects"
+              className="flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+            >
+              <span>All Projects</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {featuredProjects.map((project) => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Featured Developers Section */}
-      {featuredDevelopers.length > 0 && (
+      {/* Featured Developers */}
+      {featuredDevelopers.length > 0 && featuredDevelopers.length > 0 && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-8">
           <div className="flex items-end justify-between border-b border-neutral-200 dark:border-neutral-900 pb-4">
             <div>
@@ -128,7 +211,6 @@ export default function HomePage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {featuredDevelopers.map((dev) => (
               <DeveloperCard key={dev.id} developer={dev} />
@@ -137,8 +219,8 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Footer Call-to-action */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-neutral-200 dark:border-neutral-900">
+      {/* Footer CTA */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center border-t border-neutral-200 dark:border-neutral-900">
         <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Want to collaborate?</h3>
         <p className="text-neutral-700 dark:text-neutral-300 max-w-md mx-auto text-sm mb-6">
           Reach out if you are interested in working together, building something new, or discussing technical topics.
@@ -148,10 +230,9 @@ export default function HomePage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-900 dark:hover:bg-neutral-850 text-sm font-semibold rounded-lg transition-colors border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200 dark:hover:text-white"
         >
           <span>Contact Me</span>
-          <ArrowUpRight className="w-4 h-4" />
+          <ChevronDown className="w-4 h-4 rotate-[-90deg]" />
         </a>
       </section>
-
     </div>
   );
 }

@@ -12,6 +12,9 @@ export const siteConfigSchema = z.object({
   linkedin_url: z.string().url("Must be a valid URL").or(z.string().length(0)),
   twitter_url: z.string().url("Must be a valid URL").or(z.string().length(0)),
   footer_content: z.string().min(1, "Footer content is required"),
+  profile_bio: z.string().optional().default(""),
+  profile_typing_lines: z.array(z.string()).optional().default([]),
+  github_username: z.string().optional().default(""),
   seo_defaults: z.object({
     title: z.string().min(1, "SEO title is required"),
     description: z.string().min(1, "SEO description is required"),
