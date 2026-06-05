@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "id": "portfolio-cms",
+    "title": "Portfolio CMS & Developer Showcase Platform",
+    "description": "A premium developer portfolio and Git-based CMS built with Next.js, TypeScript, Tailwind CSS, and Framer Motion. It supports admin workflows, GitHub metadata enrichment, and static export for GitHub Pages.",
+    "short_description": "A polished Git-based portfolio platform with admin CMS workflows and static export support.",
+    "tech_stack": ["Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "GitHub API"],
+    "screenshots": ["https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1200&q=80"],
+    "start_date": "2026-01-01",
+    "end_date": "2026-06-01",
+    "status": "completed",
+    "featured": true,
+    "github_repo_url": "https://github.com/RasikhAli/RasikhAli.github.io",
+    "linkedin_post_url": "",
+    "live_url": "https://rasikhali.github.io",
+    "developer_ids": ["rasikh-ali"],
+    "created_at": "2026-06-05T12:00:00.000Z",
+    "updated_at": "2026-06-05T12:00:00.000Z"
+  },
+  {
+    "id": "analytics-console",
+    "title": "Analytics Console",
+    "description": "A lightweight analytics dashboard concept with modular cards, visual summaries, and responsive layouts for product teams.",
+    "short_description": "A responsive analytics dashboard concept for product insights and status tracking.",
+    "tech_stack": ["React", "TypeScript", "Tailwind CSS", "Charts"],
+    "screenshots": ["https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80"],
+    "start_date": "2025-11-01",
+    "end_date": "2026-02-01",
+    "status": "in_progress",
+    "featured": false,
+    "github_repo_url": "",
+    "linkedin_post_url": "",
+    "live_url": "",
+    "developer_ids": ["sarah-chen"],
+    "created_at": "2026-06-05T12:00:00.000Z",
+    "updated_at": "2026-06-05T12:00:00.000Z"
+  }
+]
