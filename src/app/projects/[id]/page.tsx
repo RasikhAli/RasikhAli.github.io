@@ -1,15 +1,17 @@
 import projectsData from "@data/projects.json";
 import { ProjectDetailsClient } from "./client";
 
-export function generateStaticParams() {
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
   return projectsData.map((project) => ({ id: project.id }));
 }
 
 export default async function ProjectDetailsPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
+  const { id } = params;
   return <ProjectDetailsClient id={id} />;
 }
