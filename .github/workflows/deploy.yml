@@ -25,11 +25,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-id: 22
+          node-version: 22
           cache: npm
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Remove server-only API routes (incompatible with static export)
+        run: rm -rf src/app/api
 
       - name: Build Static Site
         env:

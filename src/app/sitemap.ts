@@ -3,6 +3,8 @@ import siteConfig from "../../data/site-config.json";
 import developersData from "../../data/developers.json";
 import projectsData from "../../data/projects.json";
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://rasikhali.github.io";
 
