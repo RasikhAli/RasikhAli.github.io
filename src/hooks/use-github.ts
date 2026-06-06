@@ -177,13 +177,19 @@ export function useGitHub() {
     setErrorMsg("");
     const path = `public/uploads/${fileName}`;
     try {
+      // Strip data URL prefix (e.g., "data:image/png;base64,") if present
+      // GitHub API expects raw base64 content without the header
+      const rawBase64 = base64Content.includes("base64,")
+        ? base64Content.split("base64,")[1]
+        : base64Content;
+
       if (isClientMode) {
         if (!token) {
           throw new Error("GitHub PAT required for upload.");
         }
         await uploadImageToGitHub({
           path,
-          base64Content,
+          base64Content: rawBase64,
           message: `CMS: Upload screenshot ${fileName}`,
           token,
           repoOwner,
@@ -194,7 +200,7 @@ export function useGitHub() {
         const res = await fetch("/api/commit/image", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path, base64Content, message: `CMS: Upload screenshot ${fileName}` }),
+          body: JSON.stringify({ path, base64Content: rawBase64, message: `CMS: Upload screenshot ${fileName}` }),
         });
         if (!res.ok) {
           const errData = await res.json();
