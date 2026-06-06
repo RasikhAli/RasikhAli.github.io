@@ -1,4 +1,4 @@
-import developersData from "@data/developers.json";
+import developersData from "../../../../data/developers.json";
 import { DeveloperPageClient } from "./client";
 
 export async function generateStaticParams() {

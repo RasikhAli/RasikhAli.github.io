@@ -1,4 +1,4 @@
-import projectsData from "@data/projects.json";
+import projectsData from "../../../../data/projects.json";
 import { ProjectDetailsClient } from "./client";
 
 export async function generateStaticParams() {
