@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import { ArrowLeft, Calendar, ShieldAlert, ExternalLink, Share2, Copy, Check, ChevronRight } from "lucide-react";
 import { Github, Linkedin } from "@/components/brand-icons";
 import { Lightbox } from "@/components/lightbox";
@@ -104,6 +105,7 @@ export function ProjectDetailsClient({ id }: { id: string }) {
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">About the Project</h3>
               <div className="prose prose-neutral dark:prose-invert max-w-none text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
                 <ReactMarkdown
+                  rehypePlugins={[rehypeRaw]}
                   components={{
                     h1: ({ children }) => <h1 className="text-2xl font-bold mt-6 mb-3 text-neutral-900 dark:text-white">{children}</h1>,
                     h2: ({ children }) => <h2 className="text-xl font-bold mt-5 mb-2 text-neutral-900 dark:text-white">{children}</h2>,
