@@ -6,7 +6,7 @@ import { ArrowLeft, Save, Plus, Edit2, Trash2, X, FolderKanban, AlertCircle, Loa
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, Project } from "@/lib/schemas";
-import { ScreenshotUploader } from "@/components/screenshot-uploader";
+import { ScreenshotUploader, type PendingFile } from "@/components/screenshot-uploader";
 import { useGitHub } from "@/hooks/use-github";
 import initialProjects from "../../../../data/projects.json";
 import developersData from "../../../../data/developers.json";
@@ -27,6 +27,7 @@ export default function AdminProjectsPage() {
   // Form local state for screenshots array & select tags
   const [screenshotsList, setScreenshotsList] = useState<string[]>([]);
   const [selectedDevIds, setSelectedDevIds] = useState<string[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
 
   useEffect(() => {
     setIsClient(true);
@@ -254,8 +255,23 @@ export default function AdminProjectsPage() {
   const handleFormSubmit = async (data: Project) => {
     setSuccessMsg("");
     
+    // Upload any pending screenshots first
+    const uploadedPaths: string[] = [];
+    for (const pending of pendingFiles) {
+      const path = await uploadFile(pending.fileName, pending.base64Content);
+      if (path) {
+        uploadedPaths.push(path);
+      } else {
+        // Upload failed — abort the whole save
+        return;
+      }
+    }
+
+    // Merge pending screenshots with existing, pending come first in order
+    const allScreenshots = [...uploadedPaths, ...screenshotsList];
+
     // Bind current screen/dev lists
-    data.screenshots = screenshotsList;
+    data.screenshots = allScreenshots;
     data.developer_ids = selectedDevIds;
 
     if (data.developer_ids.length === 0) {
@@ -284,6 +300,7 @@ export default function AdminProjectsPage() {
     const success = await updateProjectsList(updatedList, action, data.title);
     if (success) {
       setProjects(updatedList);
+      setPendingFiles([]);
       setIsFormOpen(false);
       setSuccessMsg(`Project "${data.title}" saved and committed successfully!`);
       setTimeout(() => setSuccessMsg(""), 4000);
@@ -567,7 +584,9 @@ export default function AdminProjectsPage() {
                   <ScreenshotUploader
                     screenshots={screenshotsList}
                     onChange={(list) => setScreenshotsList(list)}
-                    onUpload={uploadFile}
+                    pendingFiles={pendingFiles}
+                    onAddPending={(file) => setPendingFiles((prev) => [...prev, file])}
+                    onRemovePending={(fileName) => setPendingFiles((prev) => prev.filter((f) => f.fileName !== fileName))}
                     isUploading={status === "loading"}
                   />
                 </div>

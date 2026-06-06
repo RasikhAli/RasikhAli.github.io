@@ -1,19 +1,29 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Upload, X, Image as ImageIcon, Star, Loader2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Upload, X, Star, Loader2 } from "lucide-react";
+
+export interface PendingFile {
+  fileName: string;
+  base64Content: string;
+  dataUrl: string;
+}
 
 interface ScreenshotUploaderProps {
   screenshots: string[];
   onChange: (updatedScreenshots: string[]) => void;
-  onUpload: (fileName: string, base64Content: string) => Promise<string | null>;
+  pendingFiles: PendingFile[];
+  onAddPending: (file: PendingFile) => void;
+  onRemovePending: (fileName: string) => void;
   isUploading: boolean;
 }
 
 export function ScreenshotUploader({
   screenshots,
   onChange,
-  onUpload,
+  pendingFiles,
+  onAddPending,
+  onRemovePending,
   isUploading,
 }: ScreenshotUploaderProps) {
   const [dragActive, setDragActive] = useState(false);
@@ -35,16 +45,17 @@ export function ScreenshotUploader({
       return;
     }
 
+    const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = async () => {
       const base64 = reader.result as string;
-      const cleanName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, "_")}`;
-      
-      const uploadedPath = await onUpload(cleanName, base64);
-      if (uploadedPath) {
-        onChange([...screenshots, uploadedPath]);
-      }
+      onAddPending({
+        fileName: cleanName,
+        base64Content: base64,
+        dataUrl: base64, // data URL for local preview
+      });
     };
   };
 
@@ -64,14 +75,17 @@ export function ScreenshotUploader({
     }
   };
 
-  const removeScreenshot = (index: number) => {
-    const updated = [...screenshots];
-    updated.splice(index, 1);
-    onChange(updated);
+  const removeScreenshot = (index: number, isPending: boolean, fileName?: string) => {
+    if (isPending && fileName) {
+      onRemovePending(fileName);
+    } else {
+      const updated = [...screenshots];
+      updated.splice(index, 1);
+      onChange(updated);
+    }
   };
 
   const setAsCover = (index: number) => {
-    // Cover is always the first item in the screenshots array
     const updated = [...screenshots];
     const item = updated.splice(index, 1)[0];
     updated.unshift(item);
@@ -82,10 +96,10 @@ export function ScreenshotUploader({
     fileInputRef.current?.click();
   };
 
-  const getFullImageUrl = (path: string) => {
-    if (path.startsWith("http")) return path;
-    // Serve from the public folder/commits locally or directly from github raw content if client mode is configured
-    return `/${path}`;
+  const getImageUrl = (src: string, pendingUrl?: string) => {
+    if (pendingUrl) return pendingUrl; // Local preview for pending files
+    if (src.startsWith("http")) return src;
+    return `/${src}`;
   };
 
   return (
@@ -128,21 +142,22 @@ export function ScreenshotUploader({
             <p className="text-sm font-medium text-neutral-300">
               <span className="text-indigo-400">Click to upload</span> or drag and drop
             </p>
-            <p className="text-xs text-neutral-500">Supports PNG, JPG, JPEG, WEBP. Stored under /public/uploads</p>
+            <p className="text-xs text-neutral-500">Supports PNG, JPG, JPEG, WEBP. Files are uploaded when you save the project.</p>
           </div>
         )}
       </div>
 
       {/* Screenshots Grid */}
-      {screenshots.length > 0 && (
+      {(screenshots.length > 0 || pendingFiles.length > 0) && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+          {/* Already uploaded screenshots */}
           {screenshots.map((src, index) => (
             <div
               key={src}
               className="relative group aspect-video rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950"
             >
               <img
-                src={getFullImageUrl(src)}
+                src={getImageUrl(src)}
                 alt={`Screenshot ${index + 1}`}
                 className="w-full h-full object-cover"
               />
@@ -168,7 +183,37 @@ export function ScreenshotUploader({
                 )}
                 <button
                   type="button"
-                  onClick={() => removeScreenshot(index)}
+                  onClick={() => removeScreenshot(index, false)}
+                  className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  title="Remove screenshot"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          {/* Pending (not yet uploaded) screenshots */}
+          {pendingFiles.map((pending, index) => (
+            <div
+              key={pending.fileName}
+              className="relative group aspect-video rounded-lg overflow-hidden border border-yellow-600/50 bg-neutral-950"
+            >
+              <img
+                src={pending.dataUrl}
+                alt={`Pending ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+              
+              {/* Pending badge */}
+              <div className="absolute top-2 left-2 bg-yellow-600 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow">
+                Pending
+              </div>
+
+              {/* Actions Overlay */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => removeScreenshot(index, true, pending.fileName)}
                   className="p-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   title="Remove screenshot"
                 >
