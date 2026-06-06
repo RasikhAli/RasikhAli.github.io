@@ -48,7 +48,6 @@ export default function AdminProjectsPage() {
 
   const watchedTitle = watch("title");
   const watchedId = watch("id");
-  const watchedRepoUrl = watch("github_repo_url");
 
   useEffect(() => {
     if (!editingProject && watchedTitle && !watchedId) {
@@ -145,7 +144,7 @@ export default function AdminProjectsPage() {
   };
 
   const autoFillRepo = async (sourceUrl?: string) => {
-    const repoUrl = sourceUrl || watchedRepoUrl;
+    const repoUrl = sourceUrl;
     if (!repoUrl) return;
 
     try {
@@ -221,6 +220,7 @@ export default function AdminProjectsPage() {
     setEditingProject(null);
     setScreenshotsList([]);
     setSelectedDevIds([]);
+    setPendingFiles([]);
     reset({
       id: "",
       title: "",
@@ -244,6 +244,7 @@ export default function AdminProjectsPage() {
     setEditingProject(proj);
     setScreenshotsList(proj.screenshots || []);
     setSelectedDevIds(proj.developer_ids || []);
+    setPendingFiles([]);
     reset(proj);
     
     // Fallback: react-hook-form date inputs require yyyy-MM-dd format
@@ -253,11 +254,53 @@ export default function AdminProjectsPage() {
     setIsFormOpen(true);
   };
 
+  const toggleDeveloperSelection = (devId: string) => {
+    setSelectedDevIds((prev) => {
+      const next = prev.includes(devId)
+        ? prev.filter((id) => id !== devId)
+        : [...prev, devId];
+      return next;
+    });
+  };
+
+  // Keep form's developer_ids in sync with local selectedDevIds state
+  useEffect(() => {
+    if (isFormOpen) {
+      setValue("developer_ids", selectedDevIds, { shouldValidate: false });
+    }
+  }, [selectedDevIds, isFormOpen, setValue]);
+
   const handleFormSubmit = async (data: Project) => {
     setSuccessMsg("");
     setLocalError("");
     
     try {
+      // Validate required fields with clear messages
+      if (!data.title?.trim()) {
+        setLocalError("Project title is required.");
+        return;
+      }
+      if (!data.description?.trim()) {
+        setLocalError("Project description is required.");
+        return;
+      }
+      if (!data.short_description?.trim()) {
+        setLocalError("Short description is required.");
+        return;
+      }
+      if (!data.tech_stack || data.tech_stack.length === 0) {
+        setLocalError("Please add at least one technology to the tech stack.");
+        return;
+      }
+      if (selectedDevIds.length === 0) {
+        setLocalError("Please assign at least one developer.");
+        return;
+      }
+      if (!data.id || data.id.length < 2) {
+        setLocalError("Project ID must be at least 2 characters (lowercase with hyphens).");
+        return;
+      }
+
       // Upload any pending screenshots first
       const uploadedPaths: string[] = [];
       for (const pending of pendingFiles) {
@@ -274,45 +317,58 @@ export default function AdminProjectsPage() {
       // Merge pending screenshots with existing, pending come first in order
       const allScreenshots = [...uploadedPaths, ...screenshotsList];
 
-      // Bind current screen/dev lists
-      data.screenshots = allScreenshots;
-      data.developer_ids = selectedDevIds;
-
-      if (data.developer_ids.length === 0) {
-        setLocalError("Please assign at least one developer.");
-        return;
-      }
+      // Build the final project data
+      const projectData: Project = {
+        ...data,
+        screenshots: allScreenshots,
+        developer_ids: selectedDevIds,
+      };
 
       let updatedList: Project[] = [];
       const timestamp = new Date().toISOString();
 
       if (editingProject) {
-        data.updated_at = timestamp;
-        updatedList = projects.map((p) => (p.id === editingProject.id ? data : p));
+        projectData.updated_at = timestamp;
+        updatedList = projects.map((p) => (p.id === editingProject.id ? projectData : p));
       } else {
-        data.created_at = timestamp;
-        data.updated_at = timestamp;
+        projectData.created_at = timestamp;
+        projectData.updated_at = timestamp;
         
-        if (projects.some((p) => p.id === data.id)) {
+        if (projects.some((p) => p.id === projectData.id)) {
           setLocalError("A project with this ID already exists. Please choose a unique lowercase ID.");
           return;
         }
-        updatedList = [...projects, data];
+        updatedList = [...projects, projectData];
       }
 
       const action = editingProject ? "Update" : "Create";
-      const success = await updateProjectsList(updatedList, action, data.title);
+      const success = await updateProjectsList(updatedList, action, projectData.title);
       if (success) {
         setProjects(updatedList);
         setPendingFiles([]);
         setIsFormOpen(false);
-        setSuccessMsg(`Project "${data.title}" saved and committed successfully!`);
+        setSuccessMsg(`Project "${projectData.title}" saved and committed successfully!`);
         setTimeout(() => setSuccessMsg(""), 4000);
       }
     } catch (err: any) {
       console.error("Form submit error:", err);
       setLocalError(err?.message || "An unexpected error occurred while saving.");
     }
+  };
+
+  const onInvalid = (formErrors: any) => {
+    console.error("Form validation failed:", formErrors);
+    // Collect all error messages
+    const errorMessages: string[] = [];
+    Object.entries(formErrors).forEach(([field, err]: [string, any]) => {
+      if (err?.message) {
+        errorMessages.push(`${field}: ${err.message}`);
+      }
+    });
+    const summary = errorMessages.length > 0
+      ? `Please fix the following errors:\n• ${errorMessages.join("\n• ")}`
+      : "Please fill in all required fields correctly before saving.";
+    setLocalError(summary);
   };
 
   const handleDelete = async (proj: Project) => {
@@ -328,16 +384,6 @@ export default function AdminProjectsPage() {
       setSuccessMsg(`Project "${proj.title}" removed successfully!`);
       setTimeout(() => setSuccessMsg(""), 4000);
     }
-  };
-
-  const toggleDeveloperSelection = (devId: string) => {
-    setSelectedDevIds((prev) => {
-      const next = prev.includes(devId)
-        ? prev.filter((id) => id !== devId)
-        : [...prev, devId];
-      setValue("developer_ids", next);
-      return next;
-    });
   };
 
   if (!isClient) return null;
@@ -385,9 +431,9 @@ export default function AdminProjectsPage() {
         )}
 
         {(errorMsg || localError) && (
-          <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
-            <AlertCircle className="w-4 h-4" />
-            <span>{localError || errorMsg}</span>
+          <div className="flex items-start gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span style={{ whiteSpace: "pre-line" }}>{localError || errorMsg}</span>
           </div>
         )}
 
@@ -401,7 +447,10 @@ export default function AdminProjectsPage() {
                   {editingProject ? `Edit Project: ${editingProject.title}` : "Create Project Entry"}
                 </h3>
                 <button
-                  onClick={() => setIsFormOpen(false)}
+                  onClick={() => {
+                    setIsFormOpen(false);
+                    setLocalError("");
+                  }}
                   className="p-1 rounded-md text-neutral-450 hover:text-white hover:bg-neutral-800"
                 >
                   <X className="w-5 h-5" />
@@ -409,7 +458,7 @@ export default function AdminProjectsPage() {
               </div>
 
               {/* Form Input fields */}
-              <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+              <form onSubmit={handleSubmit(handleFormSubmit, onInvalid)} className="space-y-6">
                 
                 {/* ID and Title */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -516,13 +565,19 @@ export default function AdminProjectsPage() {
                     <input
                       type="text"
                       {...register("github_repo_url")}
-                      onBlur={(e) => {
-                        register("github_repo_url").onBlur(e);
-                        if (e.target.value) autoFillRepo(e.target.value);
-                      }}
                       placeholder="https://..."
                       className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = watch("github_repo_url");
+                        if (url) autoFillRepo(url);
+                      }}
+                      className="mt-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+                    >
+                      Auto-fill from GitHub
+                    </button>
                   </div>
 
                   <div>
@@ -580,7 +635,7 @@ export default function AdminProjectsPage() {
                     value={(watch("tech_stack") || []).join(", ")}
                     onChange={(e) => {
                       const list = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
-                      setValue("tech_stack", list);
+                      setValue("tech_stack", list, { shouldValidate: true });
                     }}
                     className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
                   />
@@ -616,7 +671,10 @@ export default function AdminProjectsPage() {
                 <div className="flex justify-end gap-3 pt-6 border-t border-neutral-800">
                   <button
                     type="button"
-                    onClick={() => setIsFormOpen(false)}
+                    onClick={() => {
+                      setIsFormOpen(false);
+                      setLocalError("");
+                    }}
                     className="px-4 py-2 bg-neutral-850 hover:bg-neutral-800 text-sm font-semibold rounded-lg text-neutral-300"
                   >
                     Cancel
