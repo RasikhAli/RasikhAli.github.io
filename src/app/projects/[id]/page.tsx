@@ -1,15 +1,26 @@
 import projectsData from "../../../../data/projects.json";
+import type { Project } from "@/lib/schemas";
 import { ProjectDetailsClient } from "./client";
 
 export async function generateStaticParams() {
-  return projectsData.map((project) => ({ id: project.id }));
+  // Handle case where projects data is empty to prevent build failure
+  const projects = Array.isArray(projectsData) ? (projectsData as Project[]) : [];
+  if (projects.length === 0) {
+    // Return a fallback param to allow static export to proceed
+    return [{ id: "placeholder" }];
+  }
+  return projects.map((project) => ({ id: project.id }));
 }
 
 export default async function ProjectDetailsPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
+  // Handle placeholder case in development
+  if (id === "placeholder") {
+    return <div>Loading projects...</div>;
+  }
   return <ProjectDetailsClient id={id} />;
 }
