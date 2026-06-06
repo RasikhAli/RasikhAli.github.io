@@ -12,6 +12,6 @@ export default withAuth({
 
 export const config = {
   // Only protect the /admin routes, excluding login / asset files
-  // Note: when running in static mode, this middleware is ignored, and client-side protection handles it.
+  // Note: when running in static mode, this proxy is ignored, and client-side protection handles it.
   matcher: ["/admin/:path*"],
 };

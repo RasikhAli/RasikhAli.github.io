@@ -48,6 +48,10 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
   },
+
+  // Silence Turbopack warning about webpack config without turbopack config
+  // The webpack config is only used for static export (deterministic chunk IDs)
+  turbopack: {},
 };
 
 export default nextConfig;
