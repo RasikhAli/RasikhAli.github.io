@@ -16,7 +16,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const getCoverImage = () => {
     if (project.screenshots && project.screenshots.length > 0) {
       const cover = project.screenshots[0];
-      return cover.startsWith("http") ? cover : `/${cover}`;
+      if (!cover) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
+      if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
+      return `/${cover}`;
     }
     return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
   };

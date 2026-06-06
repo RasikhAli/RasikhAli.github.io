@@ -16,7 +16,7 @@ function slugify(value: string) {
 }
 
 export default function AdminProjectsPage() {
-  const { updateProjectsList, uploadFile, status, statusMessage, errorMsg, token } = useGitHub();
+  const { updateProjectsList, status, statusMessage, errorMsg, token } = useGitHub();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -64,17 +64,14 @@ export default function AdminProjectsPage() {
   };
 
   const extractReadmeSummary = (readme: string): { full: string; short: string } => {
-    // Split into lines, remove the title heading (first line if it's an h1)
     const lines = readme.split("\n");
     const firstHeadingIndex = lines.findIndex((l) => l.trim().startsWith("# "));
     let contentStart = 0;
     if (firstHeadingIndex === 0) {
-      // Skip title heading and any blank lines after it
       contentStart = 1;
       while (contentStart < lines.length && lines[contentStart].trim() === "") contentStart++;
     }
     const body = lines.slice(contentStart).join("\n").trim();
-    // Short description: first 200 chars of plain-ish text (strip markdown symbols for short only)
     const plainShort = body
       .replace(/^#{1,6}\s+/gm, "")
       .replace(/\*\*(.+?)\*\*/g, "$1")
@@ -108,7 +105,6 @@ export default function AdminProjectsPage() {
   };
 
   const fetchCommitDates = async (owner: string, repo: string, headers: Record<string, string>): Promise<{ first: string; last: string }> => {
-    // Get the last page number from the Link header
     const firstPageRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&page=1`,
       { headers }
@@ -117,13 +113,11 @@ export default function AdminProjectsPage() {
     let firstCommitDate = "";
     let lastCommitDate = "";
 
-    // Get the latest commit date from the first page
     const firstPageData = firstPageRes.ok ? await firstPageRes.json() : [];
     if (firstPageData.length > 0) {
       lastCommitDate = firstPageData[0].commit?.committer?.date || firstPageData[0].commit?.author?.date || "";
     }
 
-    // Parse Link header to find the last page
     const linkHeader = firstPageRes.headers.get("link") || "";
     const lastPageMatch = linkHeader.match(/page=(\d+)>; rel="last"/);
     if (lastPageMatch) {
@@ -148,7 +142,6 @@ export default function AdminProjectsPage() {
     if (!repoUrl) return;
 
     try {
-      // Simpler regex for GitHub URLs - accepts trailing /, .git, etc.
       const match = repoUrl.match(/github\.com\/([\w.-]+)\/([\w.-]+)/i);
       if (!match) {
         alert("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
@@ -184,12 +177,10 @@ export default function AdminProjectsPage() {
       const repoData = await repoRes.json();
       const langsData = langsRes ? await langsRes.json() : {};
 
-      // Derive title from repo name and auto-generate ID
       const derivedTitle = formatRepoName(repo);
       setValue("title", derivedTitle);
       setValue("id", slugify(derivedTitle));
 
-      // Fetch README content and extract a clean summary
       const readmeContent = await fetchReadme(owner, repo, headers);
       if (readmeContent) {
         const { full, short } = extractReadmeSummary(readmeContent);
@@ -200,13 +191,11 @@ export default function AdminProjectsPage() {
         setValue("short_description", repoData.description.slice(0, 200));
       }
 
-      // Fill tech stack from GitHub languages
       const languages = Object.keys(langsData).slice(0, 10);
       if (languages.length) {
         setValue("tech_stack", languages);
       }
 
-      // Fetch commit dates for start/end date
       const { first, last } = await fetchCommitDates(owner, repo, headers);
       if (first) setValue("start_date", first.split("T")[0]);
       if (last) setValue("end_date", last.split("T")[0]);
@@ -247,7 +236,6 @@ export default function AdminProjectsPage() {
     setPendingFiles([]);
     reset(proj);
     
-    // Fallback: react-hook-form date inputs require yyyy-MM-dd format
     if (proj.start_date) setValue("start_date", proj.start_date.split("T")[0]);
     if (proj.end_date) setValue("end_date", proj.end_date.split("T")[0]);
     
@@ -263,7 +251,6 @@ export default function AdminProjectsPage() {
     });
   };
 
-  // Keep form's developer_ids in sync with local selectedDevIds state
   useEffect(() => {
     if (isFormOpen) {
       setValue("developer_ids", selectedDevIds, { shouldValidate: false });
@@ -275,7 +262,6 @@ export default function AdminProjectsPage() {
     setLocalError("");
     
     try {
-      // Validate required fields with clear messages
       if (!data.title?.trim()) {
         setLocalError("Project title is required.");
         return;
@@ -301,23 +287,17 @@ export default function AdminProjectsPage() {
         return;
       }
 
-      // Upload any pending screenshots first
-      const uploadedPaths: string[] = [];
+      // Convert pending screenshot files into base64 data URIs and embed them directly in the JSON
+      // This way, screenshots are stored inline in projects.json — no separate file uploads needed
+      const newScreenshotDataUris: string[] = [];
       for (const pending of pendingFiles) {
-        console.log("Uploading pending screenshot:", pending.fileName);
-        const path = await uploadFile(pending.fileName, pending.base64Content);
-        if (path) {
-          uploadedPaths.push(path);
-        } else {
-          // uploadFile already set errorMsg via useGitHub hook
-          return;
-        }
+        // pending.base64Content is already a data URL (data:image/...;base64,...)
+        newScreenshotDataUris.push(pending.base64Content);
       }
 
-      // Merge pending screenshots with existing, pending come first in order
-      const allScreenshots = [...uploadedPaths, ...screenshotsList];
+      // Keep existing screenshots as-is (they're either data URIs, http URLs, or old file paths)
+      const allScreenshots = [...newScreenshotDataUris, ...screenshotsList];
 
-      // Build the final project data
       const projectData: Project = {
         ...data,
         screenshots: allScreenshots,
@@ -358,7 +338,6 @@ export default function AdminProjectsPage() {
 
   const onInvalid = (formErrors: any) => {
     console.error("Form validation failed:", formErrors);
-    // Collect all error messages
     const errorMessages: string[] = [];
     Object.entries(formErrors).forEach(([field, err]: [string, any]) => {
       if (err?.message) {
@@ -384,6 +363,13 @@ export default function AdminProjectsPage() {
       setSuccessMsg(`Project "${proj.title}" removed successfully!`);
       setTimeout(() => setSuccessMsg(""), 4000);
     }
+  };
+
+  /** Returns a usable image src from a screenshot entry (http URL, data URI, or file path) */
+  const getScreenshotSrc = (src: string): string => {
+    if (!src) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120";
+    if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;
+    return `/${src}`;
   };
 
   if (!isClient) return null;
@@ -724,7 +710,7 @@ export default function AdminProjectsPage() {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-12 bg-neutral-950 rounded overflow-hidden shrink-0 border border-neutral-850">
                   <img
-                    src={proj.screenshots && proj.screenshots[0] ? (proj.screenshots[0].startsWith("http") ? proj.screenshots[0] : `/${proj.screenshots[0]}`) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120"}
+                    src={proj.screenshots && proj.screenshots[0] ? getScreenshotSrc(proj.screenshots[0]) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120"}
                     alt={proj.title}
                     className="w-full h-full object-cover"
                   />

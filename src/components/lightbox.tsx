@@ -50,7 +50,8 @@ export function Lightbox({
   };
 
   const getFullImageUrl = (path: string) => {
-    if (path.startsWith("http")) return path;
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
     return `/${path}`;
   };
 

@@ -66,7 +66,11 @@ export function ProjectDetailsClient({ id }: { id: string }) {
     }
   };
 
-  const getFullImageUrl = (path: string) => path.startsWith("http") ? path : `/${path}`;
+  const getFullImageUrl = (path: string) => {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
+    return `/${path}`;
+  };
 
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return "Present";
