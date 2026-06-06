@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, Project } from "@/lib/schemas";
 import { ScreenshotUploader } from "@/components/screenshot-uploader";
 import { useGitHub } from "@/hooks/use-github";
+import { Octokit } from "octokit";
 import initialProjects from "../../../../data/projects.json";
 import developersData from "../../../../data/developers.json";
 
@@ -16,7 +17,7 @@ function slugify(value: string) {
 }
 
 export default function AdminProjectsPage() {
-  const { updateProjectsList, uploadFile, status, statusMessage, errorMsg } = useGitHub();
+  const { updateProjectsList, uploadFile, status, statusMessage, errorMsg, token } = useGitHub();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -59,12 +60,24 @@ export default function AdminProjectsPage() {
     if (!repoUrl) return;
 
     try {
-      const res = await fetch(`/api/github/metadata?url=${encodeURIComponent(repoUrl)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch repository metadata.");
-      if (!watch("description") && data.description) setValue("description", data.description);
-      if (!watch("short_description") && data.short_description) setValue("short_description", data.short_description);
-      if (!watch("tech_stack")?.length && data.tech_stack?.length) setValue("tech_stack", data.tech_stack);
+      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      if (!match) throw new Error("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
+      const [, owner, repo] = match;
+
+      if (!token) throw new Error("GitHub PAT is required for auto-fill. Configure it in Admin Settings.");
+
+      const octokit = new Octokit({ auth: token });
+      const [repoData, langsData] = await Promise.all([
+        octokit.rest.repos.getBySlug({ owner, repo }),
+        octokit.rest.repos.listLanguages({ owner, repo }).catch(() => ({ data: {} })),
+      ]);
+
+      const languages = Object.keys(langsData.data).slice(0, 10);
+      const desc = repoData.data.description || "";
+
+      if (!watch("description") && desc) setValue("description", desc);
+      if (!watch("short_description") && desc) setValue("short_description", desc.slice(0, 200));
+      if (!watch("tech_stack")?.length && languages.length) setValue("tech_stack", languages);
     } catch (error: any) {
       alert(error.message || "Unable to fetch repository details right now.");
     }

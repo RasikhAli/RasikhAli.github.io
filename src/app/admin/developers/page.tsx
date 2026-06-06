@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { developerSchema, Developer } from "@/lib/schemas";
 import { useGitHub } from "@/hooks/use-github";
+import { Octokit } from "octokit";
 import initialDevelopers from "../../../../data/developers.json";
 
 function slugify(value: string) {
@@ -14,7 +15,7 @@ function slugify(value: string) {
 }
 
 export default function AdminDevelopersPage() {
-  const { updateDevelopersList, status, statusMessage, errorMsg } = useGitHub();
+  const { updateDevelopersList, status, statusMessage, errorMsg, token, repoOwner } = useGitHub();
   
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [editingDev, setEditingDev] = useState<Developer | null>(null);
@@ -55,15 +56,45 @@ export default function AdminDevelopersPage() {
     if (!urlToUse) return;
 
     try {
-      const res = await fetch(`/api/github/metadata?url=${encodeURIComponent(urlToUse)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch profile metadata.");
+      let data: any = {};
+
+      if (urlToUse.includes("github.com")) {
+        const usernameMatch = urlToUse.match(/github\.com\/([^/?#]+)/);
+        if (!usernameMatch) throw new Error("Invalid GitHub URL format.");
+        const username = usernameMatch[1];
+
+        if (!token) throw new Error("GitHub PAT is required for auto-fill. Configure it in Admin Settings.");
+
+        const octokit = new Octokit({ auth: token });
+        const user = await octokit.rest.users.getByUsername({ username });
+        const userData = user.data;
+
+        data.avatar = userData.avatar_url || "";
+        data.bio = userData.bio || "";
+        data.name = userData.name || userData.login || "";
+        data.id = slugify(data.name || username);
+
+        try {
+          const repos = await octokit.rest.repos.listForUser({ username, per_page: 100 });
+          const langs = new Set<string>();
+          repos.data.forEach((repo: any) => {
+            if (repo.language) langs.add(repo.language);
+          });
+          data.skills = Array.from(langs).slice(0, 10);
+        } catch {
+          data.skills = [];
+        }
+      } else if (urlToUse.includes("linkedin.com")) {
+        throw new Error("LinkedIn auto-fill is not available without OAuth. Please fill in avatar, bio, and skills manually.");
+      } else {
+        throw new Error("Please provide a GitHub or LinkedIn profile URL for auto-fill.");
+      }
 
       if (!watch("avatar") && data.avatar) setValue("avatar", data.avatar);
       if (!watch("bio") && data.bio) setValue("bio", data.bio);
       if (!watch("name") && data.name) setValue("name", data.name);
       if (!watch("skills")?.length && data.skills?.length) setValue("skills", data.skills);
-      if (!watch("id") && data.name) setValue("id", slugify(data.name));
+      if (!watch("id") && data.id) setValue("id", data.id);
     } catch (error: any) {
       alert(error.message || "Unable to fetch profile details right now.");
     }
