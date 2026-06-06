@@ -484,7 +484,7 @@ export default function AdminProjectsPage() {
                   <input
                     type="text"
                     placeholder="React, TypeScript, CSS, Node.js"
-                    defaultValue={editingProject ? editingProject.tech_stack.join(", ") : ""}
+                    value={(watch("tech_stack") || []).join(", ")}
                     onChange={(e) => {
                       const list = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
                       setValue("tech_stack", list);
