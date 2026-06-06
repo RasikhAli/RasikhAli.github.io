@@ -8,7 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, Project } from "@/lib/schemas";
 import { ScreenshotUploader } from "@/components/screenshot-uploader";
 import { useGitHub } from "@/hooks/use-github";
-import { Octokit } from "octokit";
 import initialProjects from "../../../../data/projects.json";
 import developersData from "../../../../data/developers.json";
 
@@ -60,20 +59,35 @@ export default function AdminProjectsPage() {
     if (!repoUrl) return;
 
     try {
-      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+?)(?:\/|$|#)/);
       if (!match) throw new Error("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
       const [, owner, repo] = match;
 
       if (!token) throw new Error("GitHub PAT is required for auto-fill. Configure it in Admin Settings.");
 
-      const octokit = new Octokit({ auth: token });
-      const [repoData, langsData] = await Promise.all([
-        octokit.rest.repos.get({ owner, repo }),
-        octokit.rest.repos.listLanguages({ owner, repo }).catch(() => ({ data: {} })),
+      // Use fetch directly to avoid Octokit browser issues
+      const headers: Record<string, string> = {
+        Accept: "application/vnd.github.v3+json",
+        Authorization: `Bearer ${token}`,
+      };
+
+      const [repoRes, langsRes] = await Promise.all([
+        fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
+        fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, { headers }).catch(() => null),
       ]);
 
-      const languages = Object.keys(langsData.data).slice(0, 10);
-      const desc = repoData.data.description || "";
+      if (!repoRes.ok) {
+        const errMsg = repoRes.status === 404
+          ? `Repository "${owner}/${repo}" not found on GitHub.`
+          : `GitHub API error: ${repoRes.status} — make sure your PAT has 'repo' scope.`;
+        throw new Error(errMsg);
+      }
+
+      const repoData = await repoRes.json();
+      const langsData = langsRes ? await langsRes.json() : {};
+
+      const languages = Object.keys(langsData).slice(0, 10);
+      const desc = repoData.description || "";
 
       if (!watch("description") && desc) setValue("description", desc);
       if (!watch("short_description") && desc) setValue("short_description", desc.slice(0, 200));
