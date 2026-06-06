@@ -54,6 +54,35 @@ export default function AdminProjectsPage() {
     }
   }, [watchedTitle, watchedId, editingProject, setValue]);
 
+  const formatRepoName = (name: string): string => {
+    return name
+      .replace(/[-_]/g, " ")
+      .replace(/\.git$/i, "")
+      .replace(/\/$/, "")
+      .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  };
+
+  const fetchReadme = async (owner: string, repo: string, headers: Record<string, string>): Promise<string> => {
+    const readmeVariants = ["README.md", "Readme.md", "readme.md"];
+    for (const variant of readmeVariants) {
+      try {
+        const res = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${variant}`,
+          { headers }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.content) {
+            return atob(data.content.replace(/\n/g, ""));
+          }
+        }
+      } catch {
+        // Try next variant
+      }
+    }
+    return "";
+  };
+
   const autoFillRepo = async (sourceUrl?: string) => {
     const repoUrl = sourceUrl || watchedRepoUrl;
     if (!repoUrl) return;
@@ -95,21 +124,23 @@ export default function AdminProjectsPage() {
       const repoData = await repoRes.json();
       const langsData = langsRes ? await langsRes.json() : {};
 
+      // Derive title from repo name and auto-generate ID
+      const derivedTitle = formatRepoName(repo);
+      setValue("title", derivedTitle);
+      setValue("id", slugify(derivedTitle));
+
+      // Fetch README content for description
+      const readmeContent = await fetchReadme(owner, repo, headers);
+      const description = readmeContent || repoData.description || "";
+      if (description) {
+        setValue("description", description);
+        setValue("short_description", description.slice(0, 200));
+      }
+
+      // Fill tech stack from GitHub languages
       const languages = Object.keys(langsData).slice(0, 10);
-      const desc = repoData.description || "";
-
-      if (desc) {
-        if (!watch("description")) setValue("description", desc);
-        if (!watch("short_description")) setValue("short_description", desc.slice(0, 200));
-      }
-      if (languages.length && !watch("tech_stack")?.length) {
+      if (languages.length) {
         setValue("tech_stack", languages);
-      }
-
-      if (desc || languages.length) {
-        alert(`Auto-filled from GitHub:\n• Description${desc ? "" : " (none)"}\n• Tech Stack: ${languages.join(", ") || "(none)"}`);
-      } else {
-        alert("Repository found, but no description or languages detected.");
       }
     } catch (error: any) {
       alert(error.message || "Unable to fetch repository details right now.");
