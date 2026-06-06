@@ -62,6 +62,33 @@ export default function AdminProjectsPage() {
       .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
   };
 
+  const stripMarkdown = (text: string): string => {
+    return text
+      .replace(/^#{1,6}\s+/gm, "")            // Remove heading markers
+      .replace(/\*\*(.+?)\*\*/g, "$1")         // Bold → plain text
+      .replace(/\*(.+?)\*/g, "$1")             // Italic → plain text
+      .replace(/`{1,3}[^`]*`{1,3}/g, "")       // Inline code
+      .replace(/```[\s\S]*?```/g, "")          // Code blocks
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Links → just text
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")  // Images
+      .replace(/^[-*]\s+/gm, "")               // List markers
+      .replace(/^\d+\.\s+/gm, "")              // Numbered list markers
+      .replace(/>\s+/gm, "")                   // Blockquotes
+      .replace(/\n{3,}/g, "\n\n")              // Collapse multiple newlines
+      .trim();
+  };
+
+  const extractReadmeSummary = (readme: string): { full: string; short: string } => {
+    const cleaned = stripMarkdown(readme);
+    // Split into paragraphs and filter out empty ones
+    const paragraphs = cleaned.split(/\n\s*\n/).filter(Boolean);
+    // Take the first 1-2 paragraphs for full description (skip installation/contributing sections)
+    const meaningful = paragraphs.filter((p) => p.length > 20).slice(0, 2);
+    const full = meaningful.join("\n\n");
+    const short = full.slice(0, 200);
+    return { full, short };
+  };
+
   const fetchReadme = async (owner: string, repo: string, headers: Record<string, string>): Promise<string> => {
     const readmeVariants = ["README.md", "Readme.md", "readme.md"];
     for (const variant of readmeVariants) {
@@ -81,6 +108,42 @@ export default function AdminProjectsPage() {
       }
     }
     return "";
+  };
+
+  const fetchCommitDates = async (owner: string, repo: string, headers: Record<string, string>): Promise<{ first: string; last: string }> => {
+    // Get the last page number from the Link header
+    const firstPageRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&page=1`,
+      { headers }
+    );
+
+    let firstCommitDate = "";
+    let lastCommitDate = "";
+
+    // Get the latest commit date from the first page
+    const firstPageData = firstPageRes.ok ? await firstPageRes.json() : [];
+    if (firstPageData.length > 0) {
+      lastCommitDate = firstPageData[0].commit?.committer?.date || firstPageData[0].commit?.author?.date || "";
+    }
+
+    // Parse Link header to find the last page
+    const linkHeader = firstPageRes.headers.get("link") || "";
+    const lastPageMatch = linkHeader.match(/page=(\d+)>; rel="last"/);
+    if (lastPageMatch) {
+      const lastPage = lastPageMatch[1];
+      const lastPageRes = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/commits?per_page=1&page=${lastPage}`,
+        { headers }
+      );
+      if (lastPageRes.ok) {
+        const lastPageData = await lastPageRes.json();
+        if (lastPageData.length > 0) {
+          firstCommitDate = lastPageData[0].commit?.committer?.date || lastPageData[0].commit?.author?.date || "";
+        }
+      }
+    }
+
+    return { first: firstCommitDate, last: lastCommitDate };
   };
 
   const autoFillRepo = async (sourceUrl?: string) => {
@@ -129,12 +192,15 @@ export default function AdminProjectsPage() {
       setValue("title", derivedTitle);
       setValue("id", slugify(derivedTitle));
 
-      // Fetch README content for description
+      // Fetch README content and extract a clean summary
       const readmeContent = await fetchReadme(owner, repo, headers);
-      const description = readmeContent || repoData.description || "";
-      if (description) {
-        setValue("description", description);
-        setValue("short_description", description.slice(0, 200));
+      if (readmeContent) {
+        const { full, short } = extractReadmeSummary(readmeContent);
+        if (full) setValue("description", full);
+        if (short) setValue("short_description", short);
+      } else if (repoData.description) {
+        setValue("description", repoData.description);
+        setValue("short_description", repoData.description.slice(0, 200));
       }
 
       // Fill tech stack from GitHub languages
@@ -142,6 +208,12 @@ export default function AdminProjectsPage() {
       if (languages.length) {
         setValue("tech_stack", languages);
       }
+
+      // Fetch commit dates for start/end date
+      const { first, last } = await fetchCommitDates(owner, repo, headers);
+      if (first) setValue("start_date", first.split("T")[0]);
+      if (last) setValue("end_date", last.split("T")[0]);
+
     } catch (error: any) {
       alert(error.message || "Unable to fetch repository details right now.");
     }
