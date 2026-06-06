@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 import { ArrowLeft, Calendar, ShieldAlert, ExternalLink, Share2, Copy, Check, ChevronRight } from "lucide-react";
 import { Github, Linkedin } from "@/components/brand-icons";
 import { Lightbox } from "@/components/lightbox";
@@ -97,7 +98,35 @@ export function ProjectDetailsClient({ id }: { id: string }) {
             </div>
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-neutral-900 dark:text-white">About the Project</h3>
-              <p className="leading-relaxed whitespace-pre-wrap text-neutral-700 dark:text-neutral-300">{project.description}</p>
+              <div className="prose prose-neutral dark:prose-invert max-w-none text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                <ReactMarkdown
+                  components={{
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mt-6 mb-3 text-neutral-900 dark:text-white">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mt-5 mb-2 text-neutral-900 dark:text-white">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mt-4 mb-2 text-neutral-900 dark:text-white">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-base font-bold mt-3 mb-1 text-neutral-900 dark:text-white">{children}</h4>,
+                    p: ({ children }) => <p className="mb-3 leading-relaxed">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-5 mb-3 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-5 mb-3 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="text-neutral-700 dark:text-neutral-300">{children}</li>,
+                    strong: ({ children }) => <strong className="font-bold text-neutral-900 dark:text-white">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    code: ({ children, className }) => {
+                      const isInline = !className;
+                      if (isInline) {
+                        return <code className="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded text-sm font-mono text-indigo-600 dark:text-indigo-400">{children}</code>;
+                      }
+                      return <pre className="p-4 bg-neutral-100 dark:bg-neutral-900 rounded-xl overflow-x-auto border border-neutral-200 dark:border-neutral-800 mb-3"><code className="text-sm font-mono text-neutral-800 dark:text-neutral-200">{children}</code></pre>;
+                    },
+                    a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium">{children}</a>,
+                    blockquote: ({ children }) => <blockquote className="border-l-4 border-neutral-300 dark:border-neutral-700 pl-4 italic my-3 text-neutral-600 dark:text-neutral-400">{children}</blockquote>,
+                    hr: () => <hr className="my-6 border-neutral-200 dark:border-neutral-800" />,
+                    img: ({ src, alt }) => <img src={src} alt={alt} className="rounded-xl my-4 max-w-full border border-neutral-200 dark:border-neutral-800" />,
+                  }}
+                >
+                  {project.description}
+                </ReactMarkdown>
+              </div>
             </div>
             {project.screenshots && project.screenshots.length > 0 && (
               <div className="space-y-4 pt-6">

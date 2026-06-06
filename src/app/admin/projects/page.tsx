@@ -62,31 +62,27 @@ export default function AdminProjectsPage() {
       .replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
   };
 
-  const stripMarkdown = (text: string): string => {
-    return text
-      .replace(/^#{1,6}\s+/gm, "")            // Remove heading markers
-      .replace(/\*\*(.+?)\*\*/g, "$1")         // Bold → plain text
-      .replace(/\*(.+?)\*/g, "$1")             // Italic → plain text
-      .replace(/`{1,3}[^`]*`{1,3}/g, "")       // Inline code
-      .replace(/```[\s\S]*?```/g, "")          // Code blocks
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Links → just text
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")  // Images
-      .replace(/^[-*]\s+/gm, "")               // List markers
-      .replace(/^\d+\.\s+/gm, "")              // Numbered list markers
-      .replace(/>\s+/gm, "")                   // Blockquotes
-      .replace(/\n{3,}/g, "\n\n")              // Collapse multiple newlines
-      .trim();
-  };
-
   const extractReadmeSummary = (readme: string): { full: string; short: string } => {
-    const cleaned = stripMarkdown(readme);
-    // Split into paragraphs and filter out empty ones
-    const paragraphs = cleaned.split(/\n\s*\n/).filter(Boolean);
-    // Take the first 1-2 paragraphs for full description (skip installation/contributing sections)
-    const meaningful = paragraphs.filter((p) => p.length > 20).slice(0, 2);
-    const full = meaningful.join("\n\n");
-    const short = full.slice(0, 200);
-    return { full, short };
+    // Split into lines, remove the title heading (first line if it's an h1)
+    const lines = readme.split("\n");
+    const firstHeadingIndex = lines.findIndex((l) => l.trim().startsWith("# "));
+    let contentStart = 0;
+    if (firstHeadingIndex === 0) {
+      // Skip title heading and any blank lines after it
+      contentStart = 1;
+      while (contentStart < lines.length && lines[contentStart].trim() === "") contentStart++;
+    }
+    const body = lines.slice(contentStart).join("\n").trim();
+    // Short description: first 200 chars of plain-ish text (strip markdown symbols for short only)
+    const plainShort = body
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\*\*(.+?)\*\*/g, "$1")
+      .replace(/\*(.+?)\*/g, "$1")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .trim();
+    return { full: body, short: plainShort.slice(0, 200) };
   };
 
   const fetchReadme = async (owner: string, repo: string, headers: Record<string, string>): Promise<string> => {
