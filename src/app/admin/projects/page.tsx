@@ -22,6 +22,7 @@ export default function AdminProjectsPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [localError, setLocalError] = useState("");
   const [isClient, setIsClient] = useState(false);
 
   // Form local state for screenshots array & select tags
@@ -254,56 +255,63 @@ export default function AdminProjectsPage() {
 
   const handleFormSubmit = async (data: Project) => {
     setSuccessMsg("");
+    setLocalError("");
     
-    // Upload any pending screenshots first
-    const uploadedPaths: string[] = [];
-    for (const pending of pendingFiles) {
-      const path = await uploadFile(pending.fileName, pending.base64Content);
-      if (path) {
-        uploadedPaths.push(path);
+    try {
+      // Upload any pending screenshots first
+      const uploadedPaths: string[] = [];
+      for (const pending of pendingFiles) {
+        console.log("Uploading pending screenshot:", pending.fileName);
+        const path = await uploadFile(pending.fileName, pending.base64Content);
+        if (path) {
+          uploadedPaths.push(path);
+        } else {
+          // uploadFile already set errorMsg via useGitHub hook
+          return;
+        }
+      }
+
+      // Merge pending screenshots with existing, pending come first in order
+      const allScreenshots = [...uploadedPaths, ...screenshotsList];
+
+      // Bind current screen/dev lists
+      data.screenshots = allScreenshots;
+      data.developer_ids = selectedDevIds;
+
+      if (data.developer_ids.length === 0) {
+        setLocalError("Please assign at least one developer.");
+        return;
+      }
+
+      let updatedList: Project[] = [];
+      const timestamp = new Date().toISOString();
+
+      if (editingProject) {
+        data.updated_at = timestamp;
+        updatedList = projects.map((p) => (p.id === editingProject.id ? data : p));
       } else {
-        // Upload failed — abort the whole save
-        return;
+        data.created_at = timestamp;
+        data.updated_at = timestamp;
+        
+        if (projects.some((p) => p.id === data.id)) {
+          setLocalError("A project with this ID already exists. Please choose a unique lowercase ID.");
+          return;
+        }
+        updatedList = [...projects, data];
       }
-    }
 
-    // Merge pending screenshots with existing, pending come first in order
-    const allScreenshots = [...uploadedPaths, ...screenshotsList];
-
-    // Bind current screen/dev lists
-    data.screenshots = allScreenshots;
-    data.developer_ids = selectedDevIds;
-
-    if (data.developer_ids.length === 0) {
-      alert("Please assign at least one developer.");
-      return;
-    }
-
-    let updatedList: Project[] = [];
-    const timestamp = new Date().toISOString();
-
-    if (editingProject) {
-      data.updated_at = timestamp;
-      updatedList = projects.map((p) => (p.id === editingProject.id ? data : p));
-    } else {
-      data.created_at = timestamp;
-      data.updated_at = timestamp;
-      
-      if (projects.some((p) => p.id === data.id)) {
-        alert("A project with this ID already exists. Please choose a unique lowercase ID.");
-        return;
+      const action = editingProject ? "Update" : "Create";
+      const success = await updateProjectsList(updatedList, action, data.title);
+      if (success) {
+        setProjects(updatedList);
+        setPendingFiles([]);
+        setIsFormOpen(false);
+        setSuccessMsg(`Project "${data.title}" saved and committed successfully!`);
+        setTimeout(() => setSuccessMsg(""), 4000);
       }
-      updatedList = [...projects, data];
-    }
-
-    const action = editingProject ? "Update" : "Create";
-    const success = await updateProjectsList(updatedList, action, data.title);
-    if (success) {
-      setProjects(updatedList);
-      setPendingFiles([]);
-      setIsFormOpen(false);
-      setSuccessMsg(`Project "${data.title}" saved and committed successfully!`);
-      setTimeout(() => setSuccessMsg(""), 4000);
+    } catch (err: any) {
+      console.error("Form submit error:", err);
+      setLocalError(err?.message || "An unexpected error occurred while saving.");
     }
   };
 
@@ -376,10 +384,10 @@ export default function AdminProjectsPage() {
           </div>
         )}
 
-        {errorMsg && (
+        {(errorMsg || localError) && (
           <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4" />
-            <span>{errorMsg}</span>
+            <span>{localError || errorMsg}</span>
           </div>
         )}
 
