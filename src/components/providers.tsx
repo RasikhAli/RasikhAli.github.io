@@ -16,11 +16,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
+    <SessionProvider>
       <ThemeProvider defaultTheme="dark">
         <AnalyticsProvider>{children}</AnalyticsProvider>
       </ThemeProvider>
     </SessionProvider>
   );
 }
-

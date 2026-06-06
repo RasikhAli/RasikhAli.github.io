@@ -6,12 +6,15 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { ShieldCheck, LogIn, LogOut, Key, FolderKanban, Users, Settings as SettingsIcon, CheckCircle2, AlertTriangle, ArrowRight, Activity, GitCommit } from "lucide-react";
 import { Github } from "@/components/brand-icons";
 import { useGitHub } from "@/hooks/use-github";
+import type { Project } from "@/lib/schemas";
 import projectsData from "@data/projects.json";
 import developersData from "@data/developers.json";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { data: session, status: authStatus } = useSession() as any;
+  const sessionHook = useSession() as any;
+  const session = sessionHook?.data;
+  const authStatus = sessionHook?.status;
   const { token, repoOwner, repoName, branch, isClientMode, saveConfig, clearConfig } = useGitHub();
 
   // Local state for PAT configuration form
@@ -201,7 +204,7 @@ export default function AdminDashboardPage() {
   }
 
   // Find featured statistics
-  const featuredCount = projectsData.filter((p) => p.featured).length;
+  const featuredCount = (projectsData as Project[]).filter((p) => p.featured).length;
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">

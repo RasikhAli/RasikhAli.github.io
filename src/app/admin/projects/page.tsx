@@ -59,13 +59,20 @@ export default function AdminProjectsPage() {
     if (!repoUrl) return;
 
     try {
-      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+?)(?:\/|$|#)/);
-      if (!match) throw new Error("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
-      const [, owner, repo] = match;
+      // Simpler regex for GitHub URLs - accepts trailing /, .git, etc.
+      const match = repoUrl.match(/github\.com\/([\w.-]+)\/([\w.-]+)/i);
+      if (!match) {
+        alert("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
+        return;
+      }
+      const [, owner, repoName] = match;
+      const repo = repoName.replace(/\.git$/, "").replace(/\/$/, "");
 
-      if (!token) throw new Error("GitHub PAT is required for auto-fill. Configure it in Admin Settings.");
+      if (!token) {
+        alert("GitHub PAT is required for auto-fill. Configure it in Admin Settings first.");
+        return;
+      }
 
-      // Use fetch directly to avoid Octokit browser issues
       const headers: Record<string, string> = {
         Accept: "application/vnd.github.v3+json",
         Authorization: `Bearer ${token}`,
@@ -77,9 +84,11 @@ export default function AdminProjectsPage() {
       ]);
 
       if (!repoRes.ok) {
-        const errMsg = repoRes.status === 404
-          ? `Repository "${owner}/${repo}" not found on GitHub.`
-          : `GitHub API error: ${repoRes.status} — make sure your PAT has 'repo' scope.`;
+        const errMsg = repoRes.status === 403
+          ? "GitHub API rate limit exceeded, or PAT is invalid/expired. Check your token in Admin Settings."
+          : repoRes.status === 404
+            ? `Repository "${owner}/${repo}" not found on GitHub. Check the URL.`
+            : `GitHub API error (${repoRes.status}). Make sure your PAT has 'repo' scope.`;
         throw new Error(errMsg);
       }
 
@@ -89,9 +98,19 @@ export default function AdminProjectsPage() {
       const languages = Object.keys(langsData).slice(0, 10);
       const desc = repoData.description || "";
 
-      if (!watch("description") && desc) setValue("description", desc);
-      if (!watch("short_description") && desc) setValue("short_description", desc.slice(0, 200));
-      if (!watch("tech_stack")?.length && languages.length) setValue("tech_stack", languages);
+      if (desc) {
+        if (!watch("description")) setValue("description", desc);
+        if (!watch("short_description")) setValue("short_description", desc.slice(0, 200));
+      }
+      if (languages.length && !watch("tech_stack")?.length) {
+        setValue("tech_stack", languages);
+      }
+
+      if (desc || languages.length) {
+        alert(`Auto-filled from GitHub:\n• Description${desc ? "" : " (none)"}\n• Tech Stack: ${languages.join(", ") || "(none)"}`);
+      } else {
+        alert("Repository found, but no description or languages detected.");
+      }
     } catch (error: any) {
       alert(error.message || "Unable to fetch repository details right now.");
     }
