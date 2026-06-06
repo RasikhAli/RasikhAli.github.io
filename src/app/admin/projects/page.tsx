@@ -42,7 +42,7 @@ export default function AdminProjectsPage() {
     watch,
     formState: { errors },
   } = useForm<Project>({
-    resolver: zodResolver(projectSchema),
+    resolver: zodResolver(projectSchema) as any,
   });
 
   const watchedTitle = watch("title");
@@ -68,7 +68,7 @@ export default function AdminProjectsPage() {
 
       const octokit = new Octokit({ auth: token });
       const [repoData, langsData] = await Promise.all([
-        octokit.rest.repos.getBySlug({ owner, repo }),
+        octokit.rest.repos.get({ owner, repo }),
         octokit.rest.repos.listLanguages({ owner, repo }).catch(() => ({ data: {} })),
       ]);
 
