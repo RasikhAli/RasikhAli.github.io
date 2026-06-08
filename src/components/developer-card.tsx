@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Mail, ArrowRight } from "lucide-react";
 import { Github, Linkedin } from "./brand-icons";
 import { Developer } from "@/lib/schemas";
@@ -13,20 +12,15 @@ interface DeveloperCardProps {
 
 export function DeveloperCard({ developer }: DeveloperCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
-      className="group relative flex flex-col justify-between bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-800 rounded-xl p-6 backdrop-blur-md hover:border-neutral-300 dark:hover:border-neutral-700/80 transition-colors"
-    >
+    <div className="group relative flex flex-col justify-between bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-800 rounded-xl p-6 backdrop-blur-md hover:border-neutral-300 dark:hover:border-neutral-700/80 hover:-translate-y-1 transition-all duration-300">
       <div className="space-y-4">
-        {/* Profile Header */}
         <div className="flex items-center gap-4">
           <img
             src={developer.avatar}
             alt={developer.name}
             className="w-14 h-14 rounded-full object-cover ring-2 ring-neutral-200 dark:ring-neutral-800"
+            loading="lazy"
+            decoding="async"
           />
           <div>
             <h3 className="text-base font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
@@ -38,12 +32,10 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
           </div>
         </div>
 
-        {/* Short Bio */}
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed">
           {developer.bio}
         </p>
 
-        {/* Skill Tags */}
         <div className="flex flex-wrap gap-1">
           {developer.skills.slice(0, 4).map((skill) => (
             <span
@@ -61,7 +53,6 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
         </div>
       </div>
 
-      {/* Footer / Socials / Action */}
       <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800/80 pt-4 mt-6">
         <div className="flex items-center gap-3 text-neutral-700 dark:text-neutral-400">
           {developer.github_url && (
@@ -105,6 +96,6 @@ export function DeveloperCard({ developer }: DeveloperCardProps) {
           <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }

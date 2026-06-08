@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, ChevronDown, Sparkles } from "lucide-react";
+import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, Sparkles } from "lucide-react";
 import { Github as GithubBrand, Linkedin, Twitter } from "@/components/brand-icons";
 import { ProjectCard } from "@/components/project-card";
 import { DeveloperCard } from "@/components/developer-card";
@@ -164,17 +164,23 @@ export default function HomePage() {
                   src={`https://github-readme-stats.vercel.app/api?username=${siteConfig.github_username}&show_icons=true&theme=algolia&hide_border=true&count_private=true`}
                   alt="GitHub stats"
                   className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <img
                   src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${siteConfig.github_username}&layout=compact&theme=algolia&hide_border=true`}
                   alt="Top languages"
                   className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
               <img
                 src={`https://github-readme-streak-stats.herokuapp.com/?user=${siteConfig.github_username}&theme=algolia&hide_border=true`}
                 alt="Contribution streak"
                 className="w-full mt-4 rounded-xl border border-neutral-200 dark:border-neutral-800"
+                loading="lazy"
+                decoding="async"
               />
             </div>
           </section>
