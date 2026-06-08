@@ -382,14 +382,15 @@ export default function AdminProjectsPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
+      <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none" />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+        <div className="flex items-center justify-between pb-5 border-b border-neutral-800">
           <Link
             href="/admin"
-            className="flex items-center gap-1.5 text-sm font-semibold text-neutral-450 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Admin Dashboard</span>
@@ -397,7 +398,7 @@ export default function AdminProjectsPage() {
           
           <button
             onClick={openCreateForm}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-lg text-white transition-colors shadow"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-xl text-white transition-all shadow-lg shadow-indigo-600/25"
           >
             <Plus className="w-4 h-4" />
             <span>Add Project</span>
@@ -406,25 +407,27 @@ export default function AdminProjectsPage() {
 
         {/* Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <FolderKanban className="w-8 h-8 text-indigo-400" />
-            <span>Manage Projects</span>
-          </h1>
-          <p className="text-sm text-neutral-455">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-500/10 rounded-xl">
+              <FolderKanban className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white">Manage Projects</h1>
+          </div>
+          <p className="text-sm text-neutral-400 ml-[3.25rem]">
             Create, edit, or delete projects showcase details, timelines, technologies, and screenshots.
           </p>
         </div>
 
         {/* Feedback Alert messages */}
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold">
             <Sparkles className="w-4 h-4" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {(errorMsg || localError) && (
-          <div className="flex items-start gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
+          <div className="flex items-start gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span style={{ whiteSpace: "pre-line" }}>{localError || errorMsg}</span>
           </div>
@@ -433,7 +436,7 @@ export default function AdminProjectsPage() {
         {/* Project Form Modal */}
         {isFormOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200">
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8">
               
               <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
                 <h3 className="text-lg font-bold text-white">
@@ -709,14 +712,13 @@ export default function AdminProjectsPage() {
 
         {/* Existing Projects List Grid with start_date sort */}
         <div className="grid grid-cols-1 gap-4">
-          {sortedProjects.map((proj, idx) => (
+          {sortedProjects.map((proj) => (
             <div
               key={proj.id}
-              className="bg-neutral-900/40 border border-neutral-850 rounded-xl p-5 backdrop-blur-md hover:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 opacity-0 animate-in fade-in slide-in-from-left-2"
-              style={{ animationDuration: "300ms", animationFillMode: "forwards", animationDelay: `${idx * 40}ms` }}
+              className="group bg-neutral-900/40 border border-neutral-850 rounded-2xl p-5 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300"
             >
               <div className="flex items-center gap-4">
-                <div className="w-16 h-12 bg-neutral-950 rounded overflow-hidden shrink-0 border border-neutral-850">
+                <div className="w-16 h-12 bg-neutral-950 rounded-xl overflow-hidden shrink-0 border border-neutral-800 group-hover:border-indigo-500/30 transition-colors">
                   <img
                     src={proj.screenshots && proj.screenshots[0] ? getScreenshotSrc(proj.screenshots[0]) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120"}
                     alt={proj.title}
@@ -724,14 +726,15 @@ export default function AdminProjectsPage() {
                   />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm sm:text-base">{proj.title}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className="text-[10px] bg-neutral-850 text-indigo-400 px-1.5 py-0.5 rounded uppercase font-semibold">
+                  <h3 className="font-bold text-white text-sm sm:text-base group-hover:text-indigo-400 transition-colors">{proj.title}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                    <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full font-semibold border border-indigo-500/20 uppercase tracking-wider">
                       {proj.status.replace("_", " ")}
                     </span>
                     <span className="text-[10px] text-neutral-500 font-mono">ID: {proj.id}</span>
                     {proj.start_date && (
-                      <span className="text-[10px] text-neutral-600 font-mono">
+                      <span className="text-[10px] text-neutral-500 flex items-center gap-1">
+                        <span>·</span>
                         {new Date(proj.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                       </span>
                     )}
@@ -743,14 +746,14 @@ export default function AdminProjectsPage() {
               <div className="flex gap-2 self-end sm:self-auto">
                 <button
                   onClick={() => openEditForm(proj)}
-                  className="p-2 bg-neutral-850 hover:bg-neutral-800 hover:text-indigo-400 text-neutral-450 rounded-lg transition-colors border border-neutral-800"
+                  className="p-2 bg-neutral-850 hover:bg-neutral-800 hover:text-indigo-400 text-neutral-450 rounded-xl transition-all border border-neutral-800 hover:border-indigo-500/30"
                   title="Edit project details"
                 >
                   <Edit2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(proj)}
-                  className="p-2 bg-neutral-850 hover:bg-red-950 hover:text-red-400 text-neutral-450 rounded-lg transition-colors border border-neutral-800"
+                  className="p-2 bg-neutral-850 hover:bg-red-950 hover:text-red-400 text-neutral-450 rounded-xl transition-all border border-neutral-800 hover:border-red-500/30"
                   title="Delete project entry"
                 >
                   <Trash2 className="w-4 h-4" />
