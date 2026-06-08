@@ -151,7 +151,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* GitHub Stats */}
+        {/* GitHub Stats — using github-profile-summary-cards API (more reliable) */}
         {siteConfig.github_username && (
           <section className="max-w-4xl mx-auto mb-20">
             <div className="bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 rounded-2xl backdrop-blur-sm">
@@ -159,29 +159,34 @@ export default function HomePage() {
                 <GithubBrand className="w-4 h-4 text-indigo-400" />
                 GitHub Analytics
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <img
-                  src={`https://github-readme-stats.vercel.app/api?username=${siteConfig.github_username}&show_icons=true&theme=algolia&hide_border=true&count_private=true`}
-                  alt="GitHub stats"
+                  src={`https://github-profile-summary-cards.vercel.app/api/cards/profile-details?username=${siteConfig.github_username}&theme=algolia`}
+                  alt="GitHub profile details"
                   className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
                   loading="lazy"
                   decoding="async"
+                  fetchPriority="low"
                 />
-                <img
-                  src={`https://github-readme-stats.vercel.app/api/top-langs/?username=${siteConfig.github_username}&layout=compact&theme=algolia&hide_border=true`}
-                  alt="Top languages"
-                  className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
-                  loading="lazy"
-                  decoding="async"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <img
+                    src={`https://github-profile-summary-cards.vercel.app/api/cards/repos-per-language?username=${siteConfig.github_username}&theme=algolia`}
+                    alt="Repos per language"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                  />
+                  <img
+                    src={`https://github-profile-summary-cards.vercel.app/api/cards/most-commit-language?username=${siteConfig.github_username}&theme=algolia`}
+                    alt="Most commit language"
+                    className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800"
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                  />
+                </div>
               </div>
-              <img
-                src={`https://github-readme-streak-stats.herokuapp.com/?user=${siteConfig.github_username}&theme=algolia&hide_border=true`}
-                alt="Contribution streak"
-                className="w-full mt-4 rounded-xl border border-neutral-200 dark:border-neutral-800"
-                loading="lazy"
-                decoding="async"
-              />
             </div>
           </section>
         )}
