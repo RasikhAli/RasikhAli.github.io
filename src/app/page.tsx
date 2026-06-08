@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, ChevronDown } from "lucide-react";
 import { Github, Linkedin, Twitter } from "@/components/brand-icons";
@@ -12,7 +12,15 @@ import projectsData from "../../data/projects.json";
 
 export default function HomePage() {
   const [copied, setCopied] = useState(false);
-  const featuredProjects = projectsData.filter((p) => p.featured);
+  const featuredProjects = useMemo(() => {
+    return [...projectsData]
+      .filter((p) => p.featured)
+      .sort((a, b) => {
+        if (!a.start_date) return 1;
+        if (!b.start_date) return -1;
+        return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+      });
+  }, []);
   const featuredDevelopers = developersData.filter((d) => d.featured);
   const uniqueTechs = Array.from(new Set(projectsData.flatMap((p) => p.tech_stack)));
   const owner = developersData.find((d) => d.name === siteConfig.portfolio_owner_name) || developersData[0];
@@ -187,9 +195,11 @@ export default function HomePage() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {featuredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {featuredProjects.map((project, idx) => (
+              <div key={project.id} className="group opacity-0 animate-in fade-in slide-in-from-bottom-4" style={{ animationDuration: "500ms", animationFillMode: "forwards", animationDelay: `${idx * 80}ms` }}>
+                <ProjectCard project={project} />
+              </div>
             ))}
           </div>
         </section>

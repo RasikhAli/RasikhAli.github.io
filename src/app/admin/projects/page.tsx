@@ -19,6 +19,13 @@ export default function AdminProjectsPage() {
   const { updateProjectsList, status, statusMessage, errorMsg, token } = useGitHub();
 
   const [projects, setProjects] = useState<Project[]>([]);
+  const sortedProjects = React.useMemo(() => {
+    return [...projects].sort((a, b) => {
+      if (!a.start_date) return 1;
+      if (!b.start_date) return -1;
+      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
+    });
+  }, [projects]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -700,12 +707,13 @@ export default function AdminProjectsPage() {
           </div>
         )}
 
-        {/* Existing Projects List Grid */}
+        {/* Existing Projects List Grid with start_date sort */}
         <div className="grid grid-cols-1 gap-4">
-          {projects.map((proj) => (
+          {sortedProjects.map((proj, idx) => (
             <div
               key={proj.id}
-              className="bg-neutral-900/40 border border-neutral-850 rounded-xl p-5 backdrop-blur-md hover:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              className="bg-neutral-900/40 border border-neutral-850 rounded-xl p-5 backdrop-blur-md hover:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 opacity-0 animate-in fade-in slide-in-from-left-2"
+              style={{ animationDuration: "300ms", animationFillMode: "forwards", animationDelay: `${idx * 40}ms` }}
             >
               <div className="flex items-center gap-4">
                 <div className="w-16 h-12 bg-neutral-950 rounded overflow-hidden shrink-0 border border-neutral-850">
@@ -722,6 +730,11 @@ export default function AdminProjectsPage() {
                       {proj.status.replace("_", " ")}
                     </span>
                     <span className="text-[10px] text-neutral-500 font-mono">ID: {proj.id}</span>
+                    {proj.start_date && (
+                      <span className="text-[10px] text-neutral-600 font-mono">
+                        {new Date(proj.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

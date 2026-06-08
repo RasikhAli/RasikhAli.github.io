@@ -14,7 +14,7 @@ export default function ProjectsGridPage() {
   const [selectedTech, setSelectedTech] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
+  const [sortBy, setSortBy] = useState("start_date_desc");
   const [showFilters, setShowFilters] = useState(false);
 
   // Extract all unique technologies
@@ -68,12 +68,15 @@ export default function ProjectsGridPage() {
         return matchesQuery && matchesDev && matchesTech && matchesStatus && matchesYear;
       })
       .sort((a, b) => {
-        // Sorting
-        if (sortBy === "newest") {
-          return new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime();
+        if (sortBy === "start_date_desc") {
+          if (!a.start_date) return 1;
+          if (!b.start_date) return -1;
+          return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
         }
-        if (sortBy === "oldest") {
-          return new Date(a.created_at || "").getTime() - new Date(b.created_at || "").getTime();
+        if (sortBy === "start_date_asc") {
+          if (!a.start_date) return 1;
+          if (!b.start_date) return -1;
+          return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
         }
         if (sortBy === "alpha") {
           return a.title.localeCompare(b.title);
@@ -88,7 +91,7 @@ export default function ProjectsGridPage() {
     setSelectedTech("");
     setSelectedStatus("");
     setSelectedYear("");
-    setSortBy("newest");
+    setSortBy("start_date_desc");
   };
 
   return (
@@ -139,8 +142,8 @@ export default function ProjectsGridPage() {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="px-4 py-2.5 bg-white border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 rounded-lg text-sm text-neutral-900 dark:text-neutral-300 focus:outline-none focus:border-indigo-500 transition-colors"
               >
-                <option value="newest">Sort: Newest</option>
-                <option value="oldest">Sort: Oldest</option>
+                <option value="start_date_desc">Sort: Newest Start Date</option>
+                <option value="start_date_asc">Sort: Oldest Start Date</option>
                 <option value="alpha">Sort: Alphabetical</option>
               </select>
             </div>
@@ -231,21 +234,23 @@ export default function ProjectsGridPage() {
 
         {/* Project Showcase Grid */}
         {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProjects.map((project, idx) => (
+              <div key={project.id} className="group opacity-0 animate-in fade-in slide-in-from-bottom-4" style={{ animationDuration: "400ms", animationFillMode: "forwards", animationDelay: `${idx * 60}ms` }}>
+                <ProjectCard project={project} />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-neutral-200 dark:border-neutral-850 rounded-xl bg-neutral-100/70 dark:bg-neutral-900/10">
-            <AlertCircle className="w-10 h-10 text-neutral-400 dark:text-neutral-500 mb-4" />
-            <h3 className="text-base font-bold text-neutral-800 dark:text-neutral-350">No projects found</h3>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1 max-w-sm text-center">
+          <div className="flex flex-col items-center justify-center py-24 border border-dashed border-neutral-200 dark:border-neutral-850 rounded-xl bg-neutral-100/70 dark:bg-neutral-900/10">
+            <AlertCircle className="w-12 h-12 text-neutral-400 dark:text-neutral-500 mb-4" />
+            <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-350">No projects found</h3>
+            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-2 max-w-sm text-center">
               Try adjusting your text search, resetting filters, or refining your query tags.
             </p>
             <button
               onClick={resetFilters}
-              className="mt-6 px-4 py-2 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 text-sm font-semibold rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-850 text-neutral-700 dark:text-neutral-300 dark:hover:text-white transition-all"
+              className="mt-6 px-5 py-2.5 bg-neutral-100 border border-neutral-200 dark:bg-neutral-900 dark:border-neutral-800 text-sm font-semibold rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-850 text-neutral-700 dark:text-neutral-300 dark:hover:text-white transition-all"
             >
               Reset Filters
             </button>
