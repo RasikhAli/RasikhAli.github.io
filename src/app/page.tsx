@@ -414,67 +414,67 @@ export default function HomePage() {
                         <div 
                           key={index}
                           onClick={() => handleCardClick(t)}
-                          className="p-6 bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-indigo-400/20 dark:hover:border-indigo-500/20 transition-all duration-300 space-y-4 cursor-pointer"
+                          className="group relative p-6 bg-neutral-50 dark:bg-neutral-900/30 hover:bg-neutral-100/50 dark:hover:bg-neutral-900/60 border border-neutral-200/60 dark:border-neutral-800/80 rounded-2xl hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-300 space-y-4 cursor-pointer"
                         >
                           <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               {t.avatarUrl ? (
                                 <img
                                   src={t.avatarUrl}
                                   alt={t.name}
-                                  className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
+                                  className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-800 aspect-square shrink-0"
                                 />
                               ) : (
-                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 flex items-center justify-center text-sm font-black text-white">
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-sm font-black text-white aspect-square shrink-0">
                                   {t.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                                 </div>
                               )}
-                              <div>
-                                <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{t.name}</h4>
-                                <p className="text-[11px] text-neutral-500 dark:text-neutral-455 mt-0.5">
-                                  {t.program} {t.section && `(${t.section})`} • {t.session || "Superior University"}
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">{t.name}</h4>
+                                <p className="text-[10px] text-neutral-550 dark:text-neutral-450 truncate">
+                                  {t.programShort} {t.section && `(${t.section})`} • {t.sessionShort || "Superior University"}
                                 </p>
                               </div>
                             </div>
 
                             {showRating && t.rating && (
-                              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-550/20 px-2.5 py-1 rounded-full text-amber-500">
-                                <Star className="w-3.5 h-3.5 fill-amber-500" />
-                                <span className="text-xs font-black">{t.rating}</span>
+                              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-550/20 px-2.5 py-1 rounded-full text-amber-600 dark:text-amber-500 shrink-0">
+                                <Star className="w-3 h-3 fill-amber-500" />
+                                <span className="text-[10px] font-black">{t.rating}</span>
                               </div>
                             )}
                           </div>
 
                           {/* Course metadata */}
-                          {showCourse && t.course && (
-                            <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-500/5 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/10 w-fit">
-                              Course: {t.course}
+                          {showCourse && t.courseShort && (
+                            <div className="text-[10px] text-indigo-700 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/10 w-fit truncate max-w-full">
+                              Course: {t.courseShort}
                             </div>
                           )}
 
                           {/* Testimonial comments */}
                           {showFeedback && t.feedback && (
-                            <div className="text-sm text-neutral-600 dark:text-neutral-350 leading-relaxed italic">
+                            <div className="text-xs text-neutral-600 dark:text-neutral-350 leading-relaxed italic">
                               "{t.feedback.length > 180 ? `${t.feedback.substring(0, 180)}...` : t.feedback}"
                             </div>
                           )}
 
                           {/* Social Links */}
-                          <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800/60 text-xs">
-                            <span className="text-neutral-455 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold flex items-center gap-0.5">
-                              Read details <ChevronRight className="w-3.5 h-3.5" />
+                          <div className="flex items-center justify-between pt-3 border-t border-neutral-200/50 dark:border-neutral-800/60 text-xs">
+                            <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-450 hover:text-indigo-650 dark:hover:text-indigo-400 flex items-center gap-0.5 transition-colors">
+                              Read details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                             </span>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               {showLinkedin && t.linkedinUrl && (
                                 <a
                                   href={t.linkedinUrl}
                                   onClick={(e) => e.stopPropagation()}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                                  className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1 bg-neutral-200/30 dark:bg-neutral-800/30 hover:bg-neutral-200/70 dark:hover:bg-neutral-800/70 rounded-md"
                                   title="Connect on LinkedIn"
                                 >
-                                  <Linkedin className="w-4 h-4" />
+                                  <Linkedin className="w-3.5 h-3.5" />
                                 </a>
                               )}
                               {showGithub && t.githubUrl && (
@@ -483,10 +483,10 @@ export default function HomePage() {
                                   onClick={(e) => e.stopPropagation()}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-neutral-450 hover:text-white transition-colors"
+                                  className="text-neutral-400 hover:text-white transition-colors p-1 bg-neutral-200/30 dark:bg-neutral-800/30 hover:bg-neutral-200/70 dark:hover:bg-neutral-800/70 rounded-md"
                                   title="Follow on GitHub"
                                 >
-                                  <GithubBrand className="w-4 h-4" />
+                                  <GithubBrand className="w-3.5 h-3.5" />
                                 </a>
                               )}
                             </div>
@@ -532,27 +532,27 @@ export default function HomePage() {
                   <img
                     src={selectedTestimonial.avatarUrl}
                     alt={selectedTestimonial.name}
-                    className="w-16 h-16 rounded-full object-cover border border-neutral-800"
+                    className="w-16 h-16 rounded-full object-cover border border-neutral-800 aspect-square shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-lg font-black text-white">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-lg font-black text-white aspect-square shrink-0">
                     {selectedTestimonial.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                 )}
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                   <h3 className="text-lg font-extrabold text-white">{selectedTestimonial.name}</h3>
-                  <p className="text-xs text-neutral-400">
-                    {selectedTestimonial.program} {selectedTestimonial.section && `(Sec ${selectedTestimonial.section})`}
+                  <p className="text-xs text-neutral-400 font-medium">
+                    {selectedTestimonial.programLong} {selectedTestimonial.section && `(Sec ${selectedTestimonial.section})`}
                   </p>
-                  <p className="text-[10px] text-neutral-550">
-                    Session: {selectedTestimonial.session || "Superior University"}
+                  <p className="text-[10px] text-neutral-500 font-semibold">
+                    Session: {selectedTestimonial.sessionLong || "Superior University"}
                   </p>
                 </div>
               </div>
 
               {/* Github Bio (fetched dynamically) */}
               {selectedTestimonial.githubUsername && (
-                <div className="p-4 bg-neutral-950/60 border border-neutral-850 rounded-2xl space-y-2">
+                <div className="p-4 bg-neutral-950/60 border border-neutral-850 rounded-2xl space-y-2 text-left">
                   <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider block">GitHub Bio</span>
                   {modalLoading ? (
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
@@ -564,7 +564,7 @@ export default function HomePage() {
                       {selectedTestimonial.githubBio}
                     </p>
                   ) : (
-                    <p className="text-xs text-neutral-500 italic">No GitHub bio written on their profile.</p>
+                    <p className="text-xs text-neutral-550 italic">No GitHub bio written on their profile.</p>
                   )}
                 </div>
               )}
@@ -575,18 +575,18 @@ export default function HomePage() {
                   <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
                     <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-neutral-550 block">Instructor Rating</span>
+                      <span className="text-[10px] uppercase font-bold text-neutral-555 block">Instructor Rating</span>
                       <span className="text-sm font-black text-white">{selectedTestimonial.rating} / 10</span>
                     </div>
                   </div>
                 )}
 
-                {selectedTestimonial.course && (
+                {selectedTestimonial.courseLong && (
                   <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
                     <BookOpen className="w-5 h-5 text-indigo-400" />
                     <div className="min-w-0">
-                      <span className="text-[10px] uppercase font-bold text-neutral-550 block">Registered Course</span>
-                      <span className="text-sm font-bold text-white block truncate">{selectedTestimonial.course}</span>
+                      <span className="text-[10px] uppercase font-bold text-neutral-555 block">Registered Course</span>
+                      <span className="text-sm font-bold text-white block truncate">{selectedTestimonial.courseLong}</span>
                     </div>
                   </div>
                 )}
@@ -646,7 +646,7 @@ export default function HomePage() {
                       href={selectedTestimonial.linkedinUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-600 rounded-xl text-xs font-semibold text-white transition-all"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-600 rounded-xl text-xs font-semibold text-white transition-all shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20"
                     >
                       <Linkedin className="w-3.5 h-3.5" />
                       <span>LinkedIn Profile</span>

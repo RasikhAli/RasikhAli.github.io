@@ -4,9 +4,15 @@ export interface Testimonial {
   timestamp: string;
   name: string;
   program: string;
+  programShort: string;
+  programLong: string;
   section: string;
   session: string;
+  sessionShort: string;
+  sessionLong: string;
   course: string;
+  courseShort: string;
+  courseLong: string;
   rating: number;
   feedback: string;
   dislike: string;
@@ -18,6 +24,37 @@ export interface Testimonial {
   githubUsername: string | null;
   avatarUrl: string | null;
   githubBio?: string | null;
+}
+
+export function parseFieldParentheses(text: string | null | undefined): { short: string; long: string } {
+  if (!text) return { short: "", long: "" };
+  
+  if (text.includes(',')) {
+    const parts = text.split(',').map(p => p.trim()).filter(Boolean);
+    const parsedParts = parts.map(p => {
+      const match = p.match(/^([^(]+)\(([^)]+)\)/);
+      if (match) {
+        return {
+          short: match[1].trim(),
+          long: match[2].trim()
+        };
+      }
+      return { short: p, long: p };
+    });
+    return {
+      short: parsedParts.map(p => p.short).join(', '),
+      long: parsedParts.map(p => p.long).join(', ')
+    };
+  }
+
+  const match = text.match(/^([^(]+)\(([^)]+)\)/);
+  if (match) {
+    return {
+      short: match[1].trim(),
+      long: match[2].trim()
+    };
+  }
+  return { short: text, long: text };
 }
 
 // Simple in-memory cache for profiles
@@ -170,26 +207,23 @@ export async function fetchTestimonials(sheetUrl: string): Promise<Testimonial[]
 
     const headers = rows[0].map(h => h.toLowerCase().trim());
     
-    // Find column indexes dynamically
-    const getIndex = (keywords: string[]) => {
-      return headers.findIndex(h => keywords.some(k => h.includes(k)));
-    };
-
-    const idxTimestamp = getIndex(['timestamp']);
-    const idxName = getIndex(['name']);
-    const idxProgram = getIndex(['program']);
-    const idxSection = getIndex(['section']);
-    const idxSession = getIndex(['session']);
-    const idxCourse = getIndex(['course name']);
-    const idxRating = getIndex(['rating']);
-    const idxFeedback = getIndex(['like most', 'what did you like']);
-    const idxDislike = getIndex(['dislike', 'disliked']);
-    const idxImprovement = getIndex(['improved', 'improvement']);
-    const idxRecommend = getIndex(['recommend']);
-    const idxSkills = getIndex(['skills']);
-    const idxConsent = getIndex(['fine with me posting', 'consent', 'testimonial']);
-    const idxLinkedin = getIndex(['linkedin url', 'linkedin']);
-    const idxGithub = getIndex(['github url', 'github']);
+    const idxTimestamp = headers.findIndex(h => h.includes('timestamp'));
+    const idxName = headers.findIndex(h => h.includes('name'));
+    const idxProgram = headers.findIndex(h => h.includes('program'));
+    const idxSection = headers.findIndex(h => h.includes('section'));
+    const idxSession = headers.findIndex(h => h.includes('session'));
+    const idxCourse = headers.findIndex(h => h.includes('course name'));
+    const idxRating = headers.findIndex(h => h.includes('rating'));
+    const idxFeedback = headers.findIndex(h => h.includes('like most') || h.includes('what did you like'));
+    const idxDislike = headers.findIndex(h => h.includes('dislike') || h.includes('disliked'));
+    const idxImprovement = headers.findIndex(h => h.includes('improved') || h.includes('improvement'));
+    const idxRecommend = headers.findIndex(h => h.includes('recommend'));
+    const idxSkills = headers.findIndex(h => h.includes('skills'));
+    
+    // Make these very specific so they don't overlap or false-match URLs
+    const idxConsent = headers.findIndex(h => h.includes('posting this') || h.includes('consent') || h.includes('fine with me'));
+    const idxLinkedin = headers.findIndex(h => h.includes('linkedin url') || (h.includes('linkedin') && !h.includes('posting') && !h.includes('portfolio')));
+    const idxGithub = headers.findIndex(h => h.includes('github url') || (h.includes('github') && !h.includes('rasikhali.github.io') && !h.includes('posting') && !h.includes('portfolio')));
 
     const testimonials: Testimonial[] = [];
 
@@ -218,14 +252,28 @@ export async function fetchTestimonials(sheetUrl: string): Promise<Testimonial[]
         : [];
 
       const ratingVal = idxRating !== -1 ? parseFloat(row[idxRating]) : 10;
+      
+      const rawProg = idxProgram !== -1 ? row[idxProgram] : '';
+      const rawSess = idxSession !== -1 ? row[idxSession] : '';
+      const rawCour = idxCourse !== -1 ? row[idxCourse] : '';
+
+      const parsedProg = parseFieldParentheses(rawProg);
+      const parsedSess = parseFieldParentheses(rawSess);
+      const parsedCour = parseFieldParentheses(rawCour);
 
       testimonials.push({
         timestamp: idxTimestamp !== -1 ? row[idxTimestamp] : '',
         name: row[idxName] || 'Anonymous Student',
-        program: idxProgram !== -1 ? row[idxProgram] : '',
+        program: rawProg,
+        programShort: parsedProg.short || rawProg,
+        programLong: parsedProg.long || rawProg,
         section: idxSection !== -1 ? row[idxSection] : '',
-        session: idxSession !== -1 ? row[idxSession] : '',
-        course: idxCourse !== -1 ? row[idxCourse] : '',
+        session: rawSess,
+        sessionShort: parsedSess.short || rawSess,
+        sessionLong: parsedSess.long || rawSess,
+        course: rawCour,
+        courseShort: parsedCour.short || rawCour,
+        courseLong: parsedCour.long || rawCour,
         rating: isNaN(ratingVal) ? 10 : ratingVal,
         feedback: idxFeedback !== -1 ? row[idxFeedback] : '',
         dislike: idxDislike !== -1 ? row[idxDislike] : '',
@@ -235,7 +283,7 @@ export async function fetchTestimonials(sheetUrl: string): Promise<Testimonial[]
         linkedinUrl,
         githubUrl,
         githubUsername,
-        avatarUrl: null // will be resolved asynchronously
+        avatarUrl: githubUsername ? `https://github.com/${githubUsername}.png` : null
       });
     }
 

@@ -79,28 +79,6 @@ export default function TestimonialsPage() {
         if (results.length > 0) {
           setActiveTab(results[0].id);
         }
-
-        // Fetch avatars asynchronously for each sheet
-        results.forEach((sheet, sheetIdx) => {
-          sheet.testimonials.forEach(async (t, tIdx) => {
-            if (t.githubUsername) {
-              const profile = await getGithubProfile(t.githubUsername);
-              if (profile.avatarUrl) {
-                setSheetsData(prev => {
-                  const updated = [...prev];
-                  if (updated[sheetIdx] && updated[sheetIdx].testimonials[tIdx]) {
-                    updated[sheetIdx].testimonials[tIdx] = {
-                      ...updated[sheetIdx].testimonials[tIdx],
-                      avatarUrl: profile.avatarUrl
-                    };
-                  }
-                  return updated;
-                });
-              }
-            }
-          });
-        });
-
       } catch (err) {
         console.error("Error loading sheet testimonials:", err);
       } finally {
@@ -121,7 +99,7 @@ export default function TestimonialsPage() {
           if (!prev) return null;
           return {
             ...prev,
-            avatarUrl: profile.avatarUrl || prev.avatarUrl,
+            avatarUrl: prev.avatarUrl || profile.avatarUrl,
             githubBio: profile.bio
           };
         });
@@ -175,13 +153,13 @@ export default function TestimonialsPage() {
               <div className="flex flex-wrap gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
                 {sheetsData.map((sheet) => (
                   <button
-                    key={sheet.id}
-                    onClick={() => setActiveTab(sheet.id)}
-                    className={`px-4 py-2 text-xs font-bold rounded-lg transition-all border ${
-                      activeTab === sheet.id
-                        ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20"
-                        : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700"
-                    }`}
+                     key={sheet.id}
+                     onClick={() => setActiveTab(sheet.id)}
+                     className={`px-4 py-2 text-xs font-bold rounded-lg transition-all border ${
+                       activeTab === sheet.id
+                         ? "bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/20"
+                         : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700"
+                     }`}
                   >
                     {sheet.title} ({sheet.testimonials.length})
                   </button>
@@ -201,7 +179,7 @@ export default function TestimonialsPage() {
                     <div
                       key={index}
                       onClick={() => handleCardClick(t)}
-                      className="group bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 p-6 rounded-2xl cursor-pointer hover:border-indigo-400/30 dark:hover:border-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 flex flex-col justify-between space-y-4"
+                      className="group relative bg-neutral-50 dark:bg-neutral-900/30 hover:bg-neutral-100/50 dark:hover:bg-neutral-900/60 border border-neutral-200/60 dark:border-neutral-800/80 p-6 rounded-2xl cursor-pointer hover:border-indigo-500/30 hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-300 flex flex-col justify-between space-y-5"
                     >
                       <div className="space-y-4">
                         <div className="flex items-start justify-between gap-3">
@@ -210,54 +188,54 @@ export default function TestimonialsPage() {
                               <img
                                 src={t.avatarUrl}
                                 alt={t.name}
-                                className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
+                                className="w-10 h-10 rounded-full object-cover border border-neutral-200 dark:border-neutral-800 aspect-square shrink-0"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 flex items-center justify-center text-xs font-black text-white">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 flex items-center justify-center text-xs font-black text-white aspect-square shrink-0">
                                 {t.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                               </div>
                             )}
-                            <div>
-                              <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-650 dark:group-hover:text-indigo-400 transition-colors">
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                                 {t.name}
                               </h3>
-                              <p className="text-[10px] text-neutral-500 dark:text-neutral-450">
-                                {t.program} • {t.session || "Superior University"}
+                              <p className="text-[10px] text-neutral-550 dark:text-neutral-450 truncate">
+                                {t.programShort} • {t.sessionShort || "Superior University"}
                               </p>
                             </div>
                           </div>
 
                           {activeSheet.show_rating && t.rating && (
-                            <div className="flex items-center gap-0.5 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-amber-500 shrink-0">
-                              <Star className="w-3.5 h-3.5 fill-amber-500" />
-                              <span className="text-xs font-black">{t.rating}</span>
+                            <div className="flex items-center gap-0.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-amber-600 dark:text-amber-500 shrink-0">
+                              <Star className="w-3 h-3 fill-amber-500" />
+                              <span className="text-[10px] font-black">{t.rating}</span>
                             </div>
                           )}
                         </div>
 
                         {/* Course Name */}
-                        {activeSheet.show_course && t.course && (
-                          <div className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-550/20 w-fit truncate max-w-full">
-                            Course: {t.course}
+                        {activeSheet.show_course && t.courseShort && (
+                          <div className="text-[9px] font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-550/20 w-fit truncate max-w-full">
+                            Course: {t.courseShort}
                           </div>
                         )}
 
                         {/* Snippet / Feedback */}
                         {activeSheet.show_feedback && t.feedback && (
-                          <p className="text-xs text-neutral-600 dark:text-neutral-350 line-clamp-3 italic">
+                          <p className="text-xs text-neutral-600 dark:text-neutral-350 line-clamp-3 leading-relaxed italic">
                             "{t.feedback}"
                           </p>
                         )}
                       </div>
 
                       {/* Card Footer tags and social icons */}
-                      <div className="space-y-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/60 flex flex-col justify-end">
+                      <div className="space-y-3 pt-3 border-t border-neutral-200/50 dark:border-neutral-800/60 flex flex-col justify-end">
                         {activeSheet.show_skills && t.skills && t.skills.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {t.skills.slice(0, 3).map((skill) => (
                               <span
                                 key={skill}
-                                className="text-[9px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-700"
+                                className="text-[9px] font-semibold bg-neutral-200/60 dark:bg-neutral-800/80 text-neutral-600 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-300/30 dark:border-neutral-700/50"
                               >
                                 {skill}
                               </span>
@@ -271,7 +249,7 @@ export default function TestimonialsPage() {
                         )}
 
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-semibold text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-0.5">
+                          <span className="text-[10px] font-bold text-neutral-500 dark:text-neutral-450 hover:text-indigo-650 dark:hover:text-indigo-400 flex items-center gap-0.5 transition-colors">
                             Read details <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
                           </span>
 
@@ -282,7 +260,7 @@ export default function TestimonialsPage() {
                                 onClick={(e) => e.stopPropagation()}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-neutral-450 hover:text-indigo-650 dark:hover:text-indigo-400 transition-colors"
+                                className="text-neutral-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors p-1 bg-neutral-200/30 dark:bg-neutral-800/30 hover:bg-neutral-200/70 dark:hover:bg-neutral-800/70 rounded-md"
                               >
                                 <Linkedin className="w-3.5 h-3.5" />
                               </a>
@@ -293,7 +271,7 @@ export default function TestimonialsPage() {
                                 onClick={(e) => e.stopPropagation()}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-neutral-450 hover:text-white transition-colors"
+                                className="text-neutral-400 hover:text-white transition-colors p-1 bg-neutral-200/30 dark:bg-neutral-800/30 hover:bg-neutral-200/70 dark:hover:bg-neutral-800/70 rounded-md"
                               >
                                 <GithubBrand className="w-3.5 h-3.5" />
                               </a>
@@ -328,27 +306,27 @@ export default function TestimonialsPage() {
                   <img
                     src={selectedTestimonial.avatarUrl}
                     alt={selectedTestimonial.name}
-                    className="w-16 h-16 rounded-full object-cover border border-neutral-800"
+                    className="w-16 h-16 rounded-full object-cover border border-neutral-800 aspect-square shrink-0"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-lg font-black text-white">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-lg font-black text-white aspect-square shrink-0">
                     {selectedTestimonial.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
                 )}
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                   <h3 className="text-lg font-extrabold text-white">{selectedTestimonial.name}</h3>
-                  <p className="text-xs text-neutral-400">
-                    {selectedTestimonial.program} {selectedTestimonial.section && `(Sec ${selectedTestimonial.section})`}
+                  <p className="text-xs text-neutral-400 font-medium">
+                    {selectedTestimonial.programLong} {selectedTestimonial.section && `(Sec ${selectedTestimonial.section})`}
                   </p>
-                  <p className="text-[10px] text-neutral-500">
-                    Session: {selectedTestimonial.session || "Superior University"}
+                  <p className="text-[10px] text-neutral-500 font-semibold">
+                    Session: {selectedTestimonial.sessionLong || "Superior University"}
                   </p>
                 </div>
               </div>
 
               {/* Github Bio (fetched dynamically) */}
               {selectedTestimonial.githubUsername && (
-                <div className="p-4 bg-neutral-950/60 border border-neutral-850 rounded-2xl space-y-2">
+                <div className="p-4 bg-neutral-950/60 border border-neutral-850 rounded-2xl space-y-2 text-left">
                   <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider block">GitHub Bio</span>
                   {modalLoading ? (
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
@@ -360,13 +338,13 @@ export default function TestimonialsPage() {
                       {selectedTestimonial.githubBio}
                     </p>
                   ) : (
-                    <p className="text-xs text-neutral-500 italic">No GitHub bio written on their profile.</p>
+                    <p className="text-xs text-neutral-550 italic">No GitHub bio written on their profile.</p>
                   )}
                 </div>
               )}
 
               {/* Details display grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
                 {selectedTestimonial.rating && (
                   <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
                     <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
@@ -377,19 +355,19 @@ export default function TestimonialsPage() {
                   </div>
                 )}
 
-                {selectedTestimonial.course && (
+                {selectedTestimonial.courseLong && (
                   <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
                     <BookOpen className="w-5 h-5 text-indigo-400" />
                     <div className="min-w-0">
                       <span className="text-[10px] uppercase font-bold text-neutral-500 block">Registered Course</span>
-                      <span className="text-sm font-bold text-white block truncate">{selectedTestimonial.course}</span>
+                      <span className="text-sm font-bold text-white block truncate">{selectedTestimonial.courseLong}</span>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Feedback responses */}
-              <div className="space-y-4">
+              <div className="space-y-4 text-left">
                 {selectedTestimonial.feedback && (
                   <div className="space-y-1">
                     <span className="text-[10px] uppercase font-black text-emerald-500 block tracking-wider">What they liked most about the teaching:</span>
@@ -419,7 +397,7 @@ export default function TestimonialsPage() {
               </div>
 
               {/* Skills and Footer Socials */}
-              <div className="space-y-4 pt-4 border-t border-neutral-800">
+              <div className="space-y-4 pt-4 border-t border-neutral-800 text-left">
                 {selectedTestimonial.skills && selectedTestimonial.skills.length > 0 && (
                   <div>
                     <span className="text-[10px] uppercase font-bold text-neutral-500 block mb-2">Skills Gained:</span>
@@ -442,7 +420,7 @@ export default function TestimonialsPage() {
                       href={selectedTestimonial.linkedinUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-600 rounded-xl text-xs font-semibold text-white transition-all"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-600 rounded-xl text-xs font-semibold text-white transition-all shadow-md shadow-indigo-600/10 hover:shadow-indigo-600/20"
                     >
                       <Linkedin className="w-3.5 h-3.5" />
                       <span>LinkedIn Profile</span>
