@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { ShieldCheck, LogIn, LogOut, Key, FolderKanban, Users, Settings as SettingsIcon, CheckCircle2, AlertTriangle, ArrowRight, Activity, GitCommit } from "lucide-react";
+import { ShieldCheck, LogIn, LogOut, Key, FolderKanban, Users, Settings as SettingsIcon, CheckCircle2, AlertTriangle, ArrowRight, Activity, GitCommit, MessageSquare, FileSpreadsheet } from "lucide-react";
 import { Github } from "@/components/brand-icons";
 import { useGitHub } from "@/hooks/use-github";
 import type { Project } from "@/lib/schemas";
@@ -287,7 +287,7 @@ export default function AdminDashboardPage() {
         {/* Dashboard Modules / Quick Navigation Links */}
         <div className="space-y-6">
           <h3 className="text-lg font-bold text-white">Management Modules</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
             {/* Projects Management Card */}
             <div className="group border border-neutral-850 bg-neutral-900/20 hover:border-neutral-700/60 p-6 rounded-xl transition-all flex flex-col justify-between h-48">
@@ -322,6 +322,26 @@ export default function AdminDashboardPage() {
               </div>
               <button
                 onClick={() => router.push("/admin/developers")}
+                className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 mt-4 self-start"
+              >
+                <span>Launch editor</span>
+                <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+
+            {/* Testimonials Management Card */}
+            <div className="group border border-neutral-850 bg-neutral-900/20 hover:border-neutral-700/60 p-6 rounded-xl transition-all flex flex-col justify-between h-48">
+              <div>
+                <div className="p-3 bg-neutral-850 rounded-lg text-indigo-400 border border-neutral-800 w-fit mb-4">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <h4 className="text-sm font-bold text-white group-hover:text-indigo-400 transition-colors">Testimonials</h4>
+                <p className="text-xs text-neutral-500 mt-1 leading-relaxed">
+                  Configure dynamic Google Sheet endpoints, display visibility toggles, and titles.
+                </p>
+              </div>
+              <button
+                onClick={() => router.push("/admin/testimonials")}
                 className="flex items-center gap-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300 mt-4 self-start"
               >
                 <span>Launch editor</span>

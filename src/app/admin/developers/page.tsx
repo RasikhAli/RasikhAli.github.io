@@ -37,7 +37,7 @@ export default function AdminDevelopersPage() {
     watch,
     formState: { errors },
   } = useForm<Developer>({
-    resolver: zodResolver(developerSchema),
+    resolver: zodResolver(developerSchema) as any,
   });
 
   const watchedName = watch("name");

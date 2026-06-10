@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, Sparkles, BookOpen, GraduationCap, Star, ShieldAlert } from "lucide-react";
+import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, Sparkles, BookOpen, GraduationCap, Star, ShieldAlert, ChevronRight, X } from "lucide-react";
 import { Github as GithubBrand, Linkedin, Twitter } from "@/components/brand-icons";
 import { ProjectCard } from "@/components/project-card";
 import { DeveloperCard } from "@/components/developer-card";
@@ -10,7 +10,7 @@ import siteConfig from "../../data/site-config.json";
 import developersData from "../../data/developers.json";
 import rawProjects from "../../data/projects.json";
 import { Project } from "@/lib/schemas";
-import { fetchTestimonials, getGithubAvatar, type Testimonial } from "@/lib/testimonials";
+import { fetchTestimonials, getGithubProfile, type Testimonial } from "@/lib/testimonials";
 const typedProjects = rawProjects as Project[];
 const projectsData = typedProjects;
 
@@ -18,27 +18,46 @@ export default function HomePage() {
   const [copied, setCopied] = useState(false);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loadingTestimonials, setLoadingTestimonials] = useState(true);
+  const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     async function loadTestimonials() {
-      const cfg = (siteConfig as any).testimonials_config;
-      if (!cfg || !cfg.sheet_url) {
+      const sheets = (siteConfig as any).testimonials_sheets || [];
+      const legacyConfig = (siteConfig as any).testimonials_config;
+      
+      let configuredSheets = [...sheets];
+      if (configuredSheets.length === 0 && legacyConfig?.sheet_url) {
+        configuredSheets = [
+          {
+            id: "legacy",
+            sheet_url: legacyConfig.sheet_url
+          }
+        ];
+      }
+
+      if (configuredSheets.length === 0) {
         setLoadingTestimonials(false);
         return;
       }
+
       try {
-        const list = await fetchTestimonials(cfg.sheet_url);
-        setTestimonials(list);
+        let combined: Testimonial[] = [];
+        for (const sheet of configuredSheets) {
+          const list = await fetchTestimonials(sheet.sheet_url);
+          combined = [...combined, ...list];
+        }
+        setTestimonials(combined);
         
         // Fetch Github avatars asynchronously in parallel
-        list.forEach(async (item, index) => {
+        combined.forEach(async (item, index) => {
           if (item.githubUsername) {
-            const avatar = await getGithubAvatar(item.githubUsername);
-            if (avatar) {
+            const profile = await getGithubProfile(item.githubUsername);
+            if (profile.avatarUrl) {
               setTestimonials((prev) => {
                 const next = [...prev];
                 if (next[index]) {
-                  next[index] = { ...next[index], avatarUrl: avatar };
+                  next[index] = { ...next[index], avatarUrl: profile.avatarUrl };
                 }
                 return next;
               });
@@ -53,6 +72,29 @@ export default function HomePage() {
     }
     loadTestimonials();
   }, []);
+
+  const handleCardClick = async (testimonial: Testimonial) => {
+    setSelectedTestimonial(testimonial);
+    if (testimonial.githubUsername) {
+      setModalLoading(true);
+      try {
+        const profile = await getGithubProfile(testimonial.githubUsername);
+        setSelectedTestimonial(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            avatarUrl: profile.avatarUrl || prev.avatarUrl,
+            githubBio: profile.bio
+          };
+        });
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setModalLoading(false);
+      }
+    }
+  };
+
   const featuredProjects = useMemo(() => {
     return [...projectsData]
       .filter((p) => p.featured)
@@ -333,7 +375,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-
             {/* Testimonials List */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex items-center justify-between">
@@ -359,121 +400,276 @@ export default function HomePage() {
                   <p className="text-xs text-neutral-500 mt-1">Configure sheet URL or enable testimonials displaying in settings.</p>
                 </div>
               ) : (
-                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                  {testimonials.map((t, index) => {
-                    const showRating = (siteConfig.testimonials_config as any)?.show_rating ?? true;
-                    const showFeedback = (siteConfig.testimonials_config as any)?.show_feedback ?? true;
-                    const showDislike = (siteConfig.testimonials_config as any)?.show_dislike ?? false;
-                    const showSkills = (siteConfig.testimonials_config as any)?.show_skills ?? true;
-                    const showCourse = (siteConfig.testimonials_config as any)?.show_course ?? true;
-                    const showLinkedin = (siteConfig.testimonials_config as any)?.show_linkedin ?? true;
-                    const showGithub = (siteConfig.testimonials_config as any)?.show_github ?? true;
+                <div className="space-y-4">
+                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {testimonials.slice(0, 3).map((t, index) => {
+                      const firstSheet = (siteConfig as any).testimonials_sheets?.[0] || (siteConfig as any).testimonials_config || {};
+                      const showRating = firstSheet.show_rating ?? true;
+                      const showFeedback = firstSheet.show_feedback ?? true;
+                      const showCourse = firstSheet.show_course ?? true;
+                      const showLinkedin = firstSheet.show_linkedin ?? true;
+                      const showGithub = firstSheet.show_github ?? true;
 
-                    return (
-                      <div 
-                        key={index}
-                        className="p-6 bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-indigo-400/20 dark:hover:border-indigo-500/20 transition-all duration-300 space-y-4"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-center gap-3">
-                            {t.avatarUrl ? (
-                              <img
-                                src={t.avatarUrl}
-                                alt={t.name}
-                                className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-black text-white">
-                                {t.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                      return (
+                        <div 
+                          key={index}
+                          onClick={() => handleCardClick(t)}
+                          className="p-6 bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-indigo-400/20 dark:hover:border-indigo-500/20 transition-all duration-300 space-y-4 cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              {t.avatarUrl ? (
+                                <img
+                                  src={t.avatarUrl}
+                                  alt={t.name}
+                                  className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
+                                />
+                              ) : (
+                                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-650 flex items-center justify-center text-sm font-black text-white">
+                                  {t.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                                </div>
+                              )}
+                              <div>
+                                <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{t.name}</h4>
+                                <p className="text-[11px] text-neutral-500 dark:text-neutral-455 mt-0.5">
+                                  {t.program} {t.section && `(${t.section})`} • {t.session || "Superior University"}
+                                </p>
+                              </div>
+                            </div>
+
+                            {showRating && t.rating && (
+                              <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-550/20 px-2.5 py-1 rounded-full text-amber-500">
+                                <Star className="w-3.5 h-3.5 fill-amber-500" />
+                                <span className="text-xs font-black">{t.rating}</span>
                               </div>
                             )}
-                            <div>
-                              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{t.name}</h4>
-                              <p className="text-[11px] text-neutral-500 dark:text-neutral-455 mt-0.5">
-                                {t.program} {t.section && `(${t.section})`} • {t.session || "Superior University"}
-                              </p>
-                            </div>
                           </div>
 
-                          {showRating && t.rating && (
-                            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full text-amber-500">
-                              <Star className="w-3.5 h-3.5 fill-amber-500" />
-                              <span className="text-xs font-black">{t.rating}</span>
+                          {/* Course metadata */}
+                          {showCourse && t.course && (
+                            <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-500/5 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/10 w-fit">
+                              Course: {t.course}
                             </div>
                           )}
-                        </div>
 
-                        {/* Course metadata */}
-                        {showCourse && t.course && (
-                          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-500/5 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/10 w-fit">
-                            Course: {t.course}
-                          </div>
-                        )}
-
-                        {/* Testimonial comments */}
-                        <div className="space-y-3 text-sm text-neutral-600 dark:text-neutral-350 leading-relaxed">
+                          {/* Testimonial comments */}
                           {showFeedback && t.feedback && (
-                            <div>
-                              <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-500 block mb-1">What was liked most</span>
-                              <p className="italic bg-neutral-50 dark:bg-neutral-950/40 p-3 rounded-xl border border-neutral-150 dark:border-neutral-900">"{t.feedback}"</p>
+                            <div className="text-sm text-neutral-600 dark:text-neutral-350 leading-relaxed italic">
+                              "{t.feedback.length > 180 ? `${t.feedback.substring(0, 180)}...` : t.feedback}"
                             </div>
                           )}
-                          
-                          {showDislike && t.dislike && (
-                            <div>
-                              <span className="text-[10px] uppercase font-extrabold tracking-wider text-rose-500 block mb-1">Critique / Suggestions</span>
-                              <p className="italic bg-neutral-50 dark:bg-neutral-950/40 p-3 rounded-xl border border-neutral-150 dark:border-neutral-900">"{t.dislike}"</p>
-                            </div>
-                          )}
-                        </div>
 
-                        {/* Skills gained */}
-                        {showSkills && t.skills && t.skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-2">
-                            {t.skills.map((skill) => (
-                              <span
-                                key={skill}
-                                className="text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2.5 py-1 rounded-full border border-neutral-200 dark:border-neutral-700"
-                              >
-                                {skill}
-                              </span>
-                            ))}
+                          {/* Social Links */}
+                          <div className="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800/60 text-xs">
+                            <span className="text-neutral-455 hover:text-indigo-600 dark:hover:text-indigo-400 font-semibold flex items-center gap-0.5">
+                              Read details <ChevronRight className="w-3.5 h-3.5" />
+                            </span>
+                            <div className="flex items-center gap-3">
+                              {showLinkedin && t.linkedinUrl && (
+                                <a
+                                  href={t.linkedinUrl}
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                                  title="Connect on LinkedIn"
+                                >
+                                  <Linkedin className="w-4 h-4" />
+                                </a>
+                              )}
+                              {showGithub && t.githubUrl && (
+                                <a
+                                  href={t.githubUrl}
+                                  onClick={(e) => e.stopPropagation()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-neutral-450 hover:text-white transition-colors"
+                                  title="Follow on GitHub"
+                                >
+                                  <GithubBrand className="w-4 h-4" />
+                                </a>
+                              )}
+                            </div>
                           </div>
-                        )}
-
-                        {/* Social Links */}
-                        <div className="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
-                          {showLinkedin && t.linkedinUrl && (
-                            <a
-                              href={t.linkedinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                              title="Connect on LinkedIn"
-                            >
-                              <Linkedin className="w-4 h-4" />
-                            </a>
-                          )}
-                          {showGithub && t.githubUrl && (
-                            <a
-                              href={t.githubUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-neutral-450 hover:text-white transition-colors"
-                              title="Follow on GitHub"
-                            >
-                              <GithubBrand className="w-4 h-4" />
-                            </a>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  
+                  {testimonials.length > 3 && (
+                    <div className="pt-2 text-center">
+                      <Link
+                        href="/testimonials"
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all"
+                      >
+                        <span>View all student reviews ({testimonials.length})</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </div>
         </section>
+
+        {/* Testimonials Detail Popup Modal */}
+        {selectedTestimonial && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative overflow-y-auto max-h-[90vh] text-left">
+              
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedTestimonial(null)}
+                className="absolute right-6 top-6 p-2 bg-neutral-800/80 hover:bg-neutral-805 rounded-full text-neutral-400 hover:text-white transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Student Identification header */}
+              <div className="flex items-center gap-4">
+                {selectedTestimonial.avatarUrl ? (
+                  <img
+                    src={selectedTestimonial.avatarUrl}
+                    alt={selectedTestimonial.name}
+                    className="w-16 h-16 rounded-full object-cover border border-neutral-800"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-655 flex items-center justify-center text-lg font-black text-white">
+                    {selectedTestimonial.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <h3 className="text-lg font-extrabold text-white">{selectedTestimonial.name}</h3>
+                  <p className="text-xs text-neutral-400">
+                    {selectedTestimonial.program} {selectedTestimonial.section && `(Sec ${selectedTestimonial.section})`}
+                  </p>
+                  <p className="text-[10px] text-neutral-550">
+                    Session: {selectedTestimonial.session || "Superior University"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Github Bio (fetched dynamically) */}
+              {selectedTestimonial.githubUsername && (
+                <div className="p-4 bg-neutral-950/60 border border-neutral-850 rounded-2xl space-y-2">
+                  <span className="text-[10px] font-extrabold text-indigo-400 uppercase tracking-wider block">GitHub Bio</span>
+                  {modalLoading ? (
+                    <div className="flex items-center gap-2 text-xs text-neutral-500">
+                      <span className="w-3 h-3 border border-indigo-450 border-t-transparent rounded-full animate-spin" />
+                      <span>Fetching profile...</span>
+                    </div>
+                  ) : selectedTestimonial.githubBio ? (
+                    <p className="text-xs text-neutral-300 leading-relaxed font-medium">
+                      {selectedTestimonial.githubBio}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-neutral-500 italic">No GitHub bio written on their profile.</p>
+                  )}
+                </div>
+              )}
+
+              {/* Details display grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+                {selectedTestimonial.rating && (
+                  <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
+                    <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-neutral-550 block">Instructor Rating</span>
+                      <span className="text-sm font-black text-white">{selectedTestimonial.rating} / 10</span>
+                    </div>
+                  </div>
+                )}
+
+                {selectedTestimonial.course && (
+                  <div className="p-4 bg-neutral-950/40 border border-neutral-850 rounded-2xl flex items-center gap-3">
+                    <BookOpen className="w-5 h-5 text-indigo-400" />
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold text-neutral-550 block">Registered Course</span>
+                      <span className="text-sm font-bold text-white block truncate">{selectedTestimonial.course}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Feedback responses */}
+              <div className="space-y-4 text-left">
+                {selectedTestimonial.feedback && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-black text-emerald-500 block tracking-wider">What they liked most about the teaching:</span>
+                    <p className="italic text-xs text-neutral-300 leading-relaxed bg-neutral-950/60 p-3.5 rounded-2xl border border-neutral-850">
+                      "{selectedTestimonial.feedback}"
+                    </p>
+                  </div>
+                )}
+
+                {selectedTestimonial.dislike && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-black text-rose-500 block tracking-wider font-bold">What they disliked or suggested:</span>
+                    <p className="italic text-xs text-neutral-305 leading-relaxed bg-neutral-950/60 p-3.5 rounded-2xl border border-neutral-850">
+                      "{selectedTestimonial.dislike}"
+                    </p>
+                  </div>
+                )}
+
+                {selectedTestimonial.improvement && (
+                  <div className="space-y-1">
+                    <span className="text-[10px] uppercase font-black text-indigo-400 block tracking-wider font-bold">What could be improved:</span>
+                    <p className="italic text-xs text-neutral-305 leading-relaxed bg-neutral-950/60 p-3.5 rounded-2xl border border-neutral-850">
+                      "{selectedTestimonial.improvement}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Skills and Footer Socials */}
+              <div className="space-y-4 pt-4 border-t border-neutral-800 text-left">
+                {selectedTestimonial.skills && selectedTestimonial.skills.length > 0 && (
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-neutral-500 block mb-2">Skills Gained:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedTestimonial.skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="text-[10px] font-semibold bg-neutral-950 border border-neutral-800 text-neutral-300 px-2.5 py-1 rounded-full"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 justify-end pt-2">
+                  {selectedTestimonial.linkedinUrl && (
+                    <a
+                      href={selectedTestimonial.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-650 hover:bg-indigo-600 rounded-xl text-xs font-semibold text-white transition-all"
+                    >
+                      <Linkedin className="w-3.5 h-3.5" />
+                      <span>LinkedIn Profile</span>
+                    </a>
+                  )}
+
+                  {selectedTestimonial.githubUrl && (
+                    <a
+                      href={selectedTestimonial.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-neutral-950 hover:bg-neutral-850 border border-neutral-800 rounded-xl text-xs font-semibold text-neutral-300 hover:text-white transition-all"
+                    >
+                      <GithubBrand className="w-3.5 h-3.5" />
+                      <span>GitHub Profile</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
         {/* Footer CTA */}
         <section className="max-w-2xl mx-auto text-center pt-16 border-t border-neutral-200 dark:border-neutral-800">

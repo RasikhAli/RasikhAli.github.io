@@ -29,6 +29,7 @@ export function Navbar() {
     { name: "Timeline", path: "/timeline" },
     { name: "Tech Explorer", path: "/tech" },
     { name: "Developers", path: "/developers" },
+    { name: "Testimonials", path: "/testimonials" },
   ];
 
   const toggleTheme = () => {

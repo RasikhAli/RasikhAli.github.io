@@ -41,7 +41,19 @@ export const siteConfigSchema = z.object({
     show_course: true,
     show_linkedin: true,
     show_github: true
-  })
+  }),
+  testimonials_sheets: z.array(z.object({
+    id: z.string().min(1, "ID is required").regex(/^[a-z0-9-]+$/, "ID must be lowercase alphanumeric with hyphens"),
+    sheet_url: z.string().url("Must be a valid URL"),
+    title: z.string().min(1, "Title is required"),
+    show_rating: z.boolean().default(true),
+    show_feedback: z.boolean().default(true),
+    show_dislike: z.boolean().default(false),
+    show_skills: z.boolean().default(true),
+    show_course: z.boolean().default(true),
+    show_linkedin: z.boolean().default(true),
+    show_github: z.boolean().default(true)
+  }))
 });
 
 export type SiteConfig = z.infer<typeof siteConfigSchema>;

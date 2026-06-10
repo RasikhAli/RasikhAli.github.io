@@ -36,5 +36,19 @@
     "show_course": true,
     "show_linkedin": true,
     "show_github": true
-  }
+  },
+  "testimonials_sheets": [
+    {
+      "id": "superior-university-s25",
+      "sheet_url": "https://docs.google.com/spreadsheets/d/15c2MNMjv95H0-_m5Q4zSGvfSIXL25CywZq71jEoqjcY/edit?usp=sharing",
+      "title": "Students Testimonial",
+      "show_rating": true,
+      "show_feedback": true,
+      "show_dislike": false,
+      "show_skills": true,
+      "show_course": true,
+      "show_linkedin": true,
+      "show_github": true
+    }
+  ]
 }

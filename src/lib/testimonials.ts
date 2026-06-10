@@ -17,10 +17,11 @@ export interface Testimonial {
   githubUrl: string | null;
   githubUsername: string | null;
   avatarUrl: string | null;
+  githubBio?: string | null;
 }
 
-// Simple in-memory cache for avatar URLs
-const avatarCache: Record<string, string> = {};
+// Simple in-memory cache for profiles
+const profileCache: Record<string, { avatarUrl: string | null; bio: string | null }> = {};
 
 /**
  * Extracts and normalizes GitHub usernames and URLs
@@ -113,11 +114,11 @@ export function parseCSV(csvText: string): string[][] {
 }
 
 /**
- * Fetches the GitHub avatar of a user with local caching.
+ * Fetches the GitHub profile data (avatar, bio) of a user with local caching.
  */
-export async function getGithubAvatar(username: string): Promise<string | null> {
-  if (!username) return null;
-  if (avatarCache[username]) return avatarCache[username];
+export async function getGithubProfile(username: string): Promise<{ avatarUrl: string | null; bio: string | null }> {
+  if (!username) return { avatarUrl: null, bio: null };
+  if (profileCache[username]) return profileCache[username];
   
   try {
     const res = await fetch(`https://api.github.com/users/${username}`, {
@@ -127,15 +128,17 @@ export async function getGithubAvatar(username: string): Promise<string | null> 
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.avatar_url) {
-        avatarCache[username] = data.avatar_url;
-        return data.avatar_url;
-      }
+      const profile = {
+        avatarUrl: data.avatar_url || null,
+        bio: data.bio || null
+      };
+      profileCache[username] = profile;
+      return profile;
     }
   } catch (e) {
-    console.warn(`Failed to fetch avatar for GitHub user ${username}:`, e);
+    console.warn(`Failed to fetch profile for GitHub user ${username}:`, e);
   }
-  return null;
+  return { avatarUrl: null, bio: null };
 }
 
 /**
