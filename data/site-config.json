@@ -25,5 +25,16 @@
     "description": "Premium developer portfolio and Git-based CMS showcase platform.",
     "og_image": "https://rasikhali.github.io/og-image.jpg",
     "keywords": ["Developer", "Portfolio", "Next.js", "React", "TypeScript", "Git-based CMS"]
+  },
+  "testimonials_config": {
+    "sheet_url": "https://docs.google.com/spreadsheets/d/15c2MNMjv95H0-_m5Q4zSGvfSIXL25CywZq71jEoqjcY/edit?usp=sharing",
+    "title": "Students Testimonial",
+    "show_rating": true,
+    "show_feedback": true,
+    "show_dislike": false,
+    "show_skills": true,
+    "show_course": true,
+    "show_linkedin": true,
+    "show_github": true
   }
 }

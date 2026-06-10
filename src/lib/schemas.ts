@@ -20,6 +20,27 @@ export const siteConfigSchema = z.object({
     description: z.string().min(1, "SEO description is required"),
     og_image: z.string().url("Must be a valid URL").or(z.string().length(0)),
     keywords: z.array(z.string())
+  }),
+  testimonials_config: z.object({
+    sheet_url: z.string().url("Must be a valid URL").or(z.string().length(0)),
+    title: z.string().min(1, "Testimonials title is required"),
+    show_rating: z.boolean().default(true),
+    show_feedback: z.boolean().default(true),
+    show_dislike: z.boolean().default(false),
+    show_skills: z.boolean().default(true),
+    show_course: z.boolean().default(true),
+    show_linkedin: z.boolean().default(true),
+    show_github: z.boolean().default(true)
+  }).optional().default({
+    sheet_url: "",
+    title: "Students Testimonial",
+    show_rating: true,
+    show_feedback: true,
+    show_dislike: false,
+    show_skills: true,
+    show_course: true,
+    show_linkedin: true,
+    show_github: true
   })
 });
 

@@ -332,6 +332,109 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
+          {/* Section: Testimonials Config */}
+          <div className="space-y-5 pt-4">
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
+              Testimonials Configuration (Google Sheet)
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Google Sheet URL</label>
+                <input
+                  type="text"
+                  {...register("testimonials_config.sheet_url")}
+                  placeholder="https://docs.google.com/spreadsheets/d/.../edit?..."
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                />
+                {errors.testimonials_config?.sheet_url && (
+                  <p className="text-xs text-red-500 mt-1">{errors.testimonials_config.sheet_url.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Testimonials Section Title</label>
+                <input
+                  type="text"
+                  {...register("testimonials_config.title")}
+                  placeholder="Students Testimonial"
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                />
+                {errors.testimonials_config?.title && (
+                  <p className="text-xs text-red-500 mt-1">{errors.testimonials_config.title.message}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Columns & Info to Display</label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-neutral-950/60 border border-neutral-800 rounded-lg">
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_rating")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show Rating</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_feedback")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show Feedback</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_dislike")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show Dislikes</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_skills")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show Skills Gained</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_course")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show Course Name</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_linkedin")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show LinkedIn Profile</span>
+                </label>
+
+                <label className="flex items-center gap-2 text-xs font-medium text-neutral-300 hover:text-white cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    {...register("testimonials_config.show_github")}
+                    className="rounded border-neutral-805 bg-neutral-950 text-indigo-600 focus:ring-indigo-500/30"
+                  />
+                  <span>Show GitHub Profile</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           {/* Section: Footer Content */}
           <div className="space-y-5 pt-4">
             <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">

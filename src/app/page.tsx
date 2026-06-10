@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, Sparkles } from "lucide-react";
+import { ArrowRight, FolderKanban, Users2, Code2, Mail, ExternalLink, Copy, Check, Sparkles, BookOpen, GraduationCap, Star, ShieldAlert } from "lucide-react";
 import { Github as GithubBrand, Linkedin, Twitter } from "@/components/brand-icons";
 import { ProjectCard } from "@/components/project-card";
 import { DeveloperCard } from "@/components/developer-card";
@@ -10,11 +10,49 @@ import siteConfig from "../../data/site-config.json";
 import developersData from "../../data/developers.json";
 import rawProjects from "../../data/projects.json";
 import { Project } from "@/lib/schemas";
+import { fetchTestimonials, getGithubAvatar, type Testimonial } from "@/lib/testimonials";
 const typedProjects = rawProjects as Project[];
 const projectsData = typedProjects;
 
 export default function HomePage() {
   const [copied, setCopied] = useState(false);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loadingTestimonials, setLoadingTestimonials] = useState(true);
+
+  useEffect(() => {
+    async function loadTestimonials() {
+      const cfg = (siteConfig as any).testimonials_config;
+      if (!cfg || !cfg.sheet_url) {
+        setLoadingTestimonials(false);
+        return;
+      }
+      try {
+        const list = await fetchTestimonials(cfg.sheet_url);
+        setTestimonials(list);
+        
+        // Fetch Github avatars asynchronously in parallel
+        list.forEach(async (item, index) => {
+          if (item.githubUsername) {
+            const avatar = await getGithubAvatar(item.githubUsername);
+            if (avatar) {
+              setTestimonials((prev) => {
+                const next = [...prev];
+                if (next[index]) {
+                  next[index] = { ...next[index], avatarUrl: avatar };
+                }
+                return next;
+              });
+            }
+          }
+        });
+      } catch (e) {
+        console.error("Error loading testimonials:", e);
+      } finally {
+        setLoadingTestimonials(false);
+      }
+    }
+    loadTestimonials();
+  }, []);
   const featuredProjects = useMemo(() => {
     return [...projectsData]
       .filter((p) => p.featured)
@@ -249,6 +287,193 @@ export default function HomePage() {
             </div>
           </section>
         )}
+
+        {/* Education & Teaching Section */}
+        <section className="max-w-7xl mx-auto mb-20">
+          <div className="flex items-end justify-between mb-10 pb-5 border-b border-neutral-200 dark:border-neutral-800">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 dark:text-white flex items-center gap-2.5">
+                <GraduationCap className="w-7 h-7 text-indigo-500" />
+                <span>Education & Teaching</span>
+              </h2>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1.5">
+                Academic lectures, labs, and mentoring the next generation of engineers.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* University Highlight Card */}
+            <div className="lg:col-span-1 bg-gradient-to-br from-indigo-50/50 to-neutral-50 dark:from-neutral-900/60 dark:to-neutral-900/40 border border-neutral-200 dark:border-neutral-800 p-8 rounded-2xl flex flex-col justify-between hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300">
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-2xl border border-indigo-500/20">
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Superior University</h3>
+                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Junior Lecturer</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                  <p>
+                    Instructing university labs and courses in <span className="font-semibold text-neutral-850 dark:text-neutral-200">Artificial Intelligence</span>, <span className="font-semibold text-neutral-850 dark:text-neutral-200">Data Science</span>, and <span className="font-semibold text-neutral-850 dark:text-neutral-200">Software Engineering</span> departments.
+                  </p>
+                  <p>
+                    Courses taught include Programming for Artificial Intelligence (PAI), Object-Oriented Programming (OOP), Programming Fundamentals (PF), Computer Networks (CN), and Artificial Intelligence Labs.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800/65 mt-6">
+                <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Currently active (S25 / Fall 2023 onwards)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonials List */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                  {(siteConfig.testimonials_config as any)?.title || "Students Testimonial"}
+                </h3>
+                {testimonials.length > 0 && (
+                  <span className="text-xs bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-full font-bold border border-indigo-100 dark:border-indigo-500/20">
+                    {testimonials.length} reviews
+                  </span>
+                )}
+              </div>
+
+              {loadingTestimonials ? (
+                <div className="flex flex-col items-center justify-center py-16 border border-neutral-200 dark:border-neutral-800 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/20">
+                  <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3" />
+                  <p className="text-xs text-neutral-500 dark:text-neutral-450">Loading live feedback responses...</p>
+                </div>
+              ) : testimonials.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 border border-dashed border-neutral-200 dark:border-neutral-800 rounded-2xl text-center">
+                  <ShieldAlert className="w-8 h-8 text-neutral-455 mb-3" />
+                  <p className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">No testimonials to display</p>
+                  <p className="text-xs text-neutral-500 mt-1">Configure sheet URL or enable testimonials displaying in settings.</p>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                  {testimonials.map((t, index) => {
+                    const showRating = (siteConfig.testimonials_config as any)?.show_rating ?? true;
+                    const showFeedback = (siteConfig.testimonials_config as any)?.show_feedback ?? true;
+                    const showDislike = (siteConfig.testimonials_config as any)?.show_dislike ?? false;
+                    const showSkills = (siteConfig.testimonials_config as any)?.show_skills ?? true;
+                    const showCourse = (siteConfig.testimonials_config as any)?.show_course ?? true;
+                    const showLinkedin = (siteConfig.testimonials_config as any)?.show_linkedin ?? true;
+                    const showGithub = (siteConfig.testimonials_config as any)?.show_github ?? true;
+
+                    return (
+                      <div 
+                        key={index}
+                        className="p-6 bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-2xl hover:border-indigo-400/20 dark:hover:border-indigo-500/20 transition-all duration-300 space-y-4"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            {t.avatarUrl ? (
+                              <img
+                                src={t.avatarUrl}
+                                alt={t.name}
+                                className="w-11 h-11 rounded-full object-cover border border-neutral-200 dark:border-neutral-800"
+                              />
+                            ) : (
+                              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-black text-white">
+                                {t.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">{t.name}</h4>
+                              <p className="text-[11px] text-neutral-500 dark:text-neutral-455 mt-0.5">
+                                {t.program} {t.section && `(${t.section})`} • {t.session || "Superior University"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {showRating && t.rating && (
+                            <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full text-amber-500">
+                              <Star className="w-3.5 h-3.5 fill-amber-500" />
+                              <span className="text-xs font-black">{t.rating}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Course metadata */}
+                        {showCourse && t.course && (
+                          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-500/5 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-500/10 w-fit">
+                            Course: {t.course}
+                          </div>
+                        )}
+
+                        {/* Testimonial comments */}
+                        <div className="space-y-3 text-sm text-neutral-600 dark:text-neutral-350 leading-relaxed">
+                          {showFeedback && t.feedback && (
+                            <div>
+                              <span className="text-[10px] uppercase font-extrabold tracking-wider text-emerald-500 block mb-1">What was liked most</span>
+                              <p className="italic bg-neutral-50 dark:bg-neutral-950/40 p-3 rounded-xl border border-neutral-150 dark:border-neutral-900">"{t.feedback}"</p>
+                            </div>
+                          )}
+                          
+                          {showDislike && t.dislike && (
+                            <div>
+                              <span className="text-[10px] uppercase font-extrabold tracking-wider text-rose-500 block mb-1">Critique / Suggestions</span>
+                              <p className="italic bg-neutral-50 dark:bg-neutral-950/40 p-3 rounded-xl border border-neutral-150 dark:border-neutral-900">"{t.dislike}"</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Skills gained */}
+                        {showSkills && t.skills && t.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-2">
+                            {t.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 px-2.5 py-1 rounded-full border border-neutral-200 dark:border-neutral-700"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Social Links */}
+                        <div className="flex items-center gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800/60">
+                          {showLinkedin && t.linkedinUrl && (
+                            <a
+                              href={t.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-neutral-450 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                              title="Connect on LinkedIn"
+                            >
+                              <Linkedin className="w-4 h-4" />
+                            </a>
+                          )}
+                          {showGithub && t.githubUrl && (
+                            <a
+                              href={t.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-neutral-450 hover:text-white transition-colors"
+                              title="Follow on GitHub"
+                            >
+                              <GithubBrand className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
 
         {/* Footer CTA */}
         <section className="max-w-2xl mx-auto text-center pt-16 border-t border-neutral-200 dark:border-neutral-800">
