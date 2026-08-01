@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Plus, Edit2, Trash2, X, FolderKanban, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Plus, Edit2, Trash2, X, FolderKanban, AlertCircle, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { projectSchema, Project } from "@/lib/schemas";
 import { ScreenshotUploader, type PendingFile } from "@/components/screenshot-uploader";
 import { useGitHub } from "@/hooks/use-github";
+import { Badge } from "@/components/ui/badge";
 import initialProjects from "../../../../data/projects.json";
 import developersData from "../../../../data/developers.json";
 
@@ -105,7 +107,7 @@ export default function AdminProjectsPage() {
           }
         }
       } catch {
-        // Try next variant
+        // Try next
       }
     }
     return "";
@@ -145,58 +147,47 @@ export default function AdminProjectsPage() {
   };
 
   const autoFillRepo = async (sourceUrl?: string) => {
-    const repoUrl = sourceUrl;
+    const repoUrl = sourceUrl || watch("github_repo_url");
     if (!repoUrl) return;
 
     try {
-      const match = repoUrl.match(/github\.com\/([\w.-]+)\/([\w.-]+)/i);
-      if (!match) {
-        alert("Invalid GitHub repository URL. Expected format: https://github.com/owner/repo");
-        return;
-      }
-      const [, owner, repoName] = match;
-      const repo = repoName.replace(/\.git$/, "").replace(/\/$/, "");
-
-      if (!token) {
-        alert("GitHub PAT is required for auto-fill. Configure it in Admin Settings first.");
-        return;
-      }
+      const match = repoUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
+      if (!match) return;
+      const owner = match[1];
+      const repo = match[2].replace(/\.git$/, "");
 
       const headers: Record<string, string> = {
         Accept: "application/vnd.github.v3+json",
-        Authorization: `Bearer ${token}`,
       };
-
-      const [repoRes, langsRes] = await Promise.all([
-        fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers }),
-        fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, { headers }).catch(() => null),
-      ]);
-
-      if (!repoRes.ok) {
-        const errMsg = repoRes.status === 403
-          ? "GitHub API rate limit exceeded, or PAT is invalid/expired. Check your token in Admin Settings."
-          : repoRes.status === 404
-            ? `Repository "${owner}/${repo}" not found on GitHub. Check the URL.`
-            : `GitHub API error (${repoRes.status}). Make sure your PAT has 'repo' scope.`;
-        throw new Error(errMsg);
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
       }
 
+      const repoRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers });
+      if (!repoRes.ok) return;
       const repoData = await repoRes.json();
-      const langsData = langsRes ? await langsRes.json() : {};
 
-      const derivedTitle = formatRepoName(repo);
-      setValue("title", derivedTitle);
-      setValue("id", slugify(derivedTitle));
+      if (!watch("title")) {
+        setValue("title", formatRepoName(repoData.name));
+        if (!watch("id")) setValue("id", slugify(repoData.name));
+      }
 
-      const readmeContent = await fetchReadme(owner, repo, headers);
-      if (readmeContent) {
-        const { full, short } = extractReadmeSummary(readmeContent);
+      const readmeText = await fetchReadme(owner, repo, headers);
+      if (readmeText) {
+        const { full, short } = extractReadmeSummary(readmeText);
         if (full) setValue("description", full);
         if (short) setValue("short_description", short);
       } else if (repoData.description) {
         setValue("description", repoData.description);
         setValue("short_description", repoData.description.slice(0, 200));
       }
+
+      if (repoData.homepage) {
+        setValue("live_url", repoData.homepage);
+      }
+
+      const langsRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/languages`, { headers });
+      const langsData = langsRes.ok ? await langsRes.json() : {};
 
       const languages = Object.keys(langsData).slice(0, 10);
       if (languages.length) {
@@ -290,19 +281,15 @@ export default function AdminProjectsPage() {
         return;
       }
       if (!data.id || data.id.length < 2) {
-        setLocalError("Project ID must be at least 2 characters (lowercase with hyphens).");
+        setLocalError("Project ID must be at least 2 characters.");
         return;
       }
 
-      // Convert pending screenshot files into base64 data URIs and embed them directly in the JSON
-      // This way, screenshots are stored inline in projects.json — no separate file uploads needed
       const newScreenshotDataUris: string[] = [];
       for (const pending of pendingFiles) {
-        // pending.base64Content is already a data URL (data:image/...;base64,...)
         newScreenshotDataUris.push(pending.base64Content);
       }
 
-      // Keep existing screenshots as-is (they're either data URIs, http URLs, or old file paths)
       const allScreenshots = [...newScreenshotDataUris, ...screenshotsList];
 
       const projectData: Project = {
@@ -322,7 +309,7 @@ export default function AdminProjectsPage() {
         projectData.updated_at = timestamp;
         
         if (projects.some((p) => p.id === projectData.id)) {
-          setLocalError("A project with this ID already exists. Please choose a unique lowercase ID.");
+          setLocalError("A project with this ID already exists.");
           return;
         }
         updatedList = [...projects, projectData];
@@ -344,21 +331,17 @@ export default function AdminProjectsPage() {
   };
 
   const onInvalid = (formErrors: any) => {
-    console.error("Form validation failed:", formErrors);
     const errorMessages: string[] = [];
     Object.entries(formErrors).forEach(([field, err]: [string, any]) => {
       if (err?.message) {
         errorMessages.push(`${field}: ${err.message}`);
       }
     });
-    const summary = errorMessages.length > 0
-      ? `Please fix the following errors:\n• ${errorMessages.join("\n• ")}`
-      : "Please fill in all required fields correctly before saving.";
-    setLocalError(summary);
+    setLocalError(errorMessages.join("\n"));
   };
 
   const handleDelete = async (proj: Project) => {
-    if (!confirm(`Are you sure you want to delete ${proj.title}? This will commit changes directly to the repository.`)) {
+    if (!confirm(`Are you sure you want to delete ${proj.title}?`)) {
       return;
     }
 
@@ -372,7 +355,6 @@ export default function AdminProjectsPage() {
     }
   };
 
-  /** Returns a usable image src from a screenshot entry (http URL, data URI, or file path) */
   const getScreenshotSrc = (src: string): string => {
     if (!src) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120";
     if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;
@@ -384,13 +366,13 @@ export default function AdminProjectsPage() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
       <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none" />
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between pb-5 border-b border-neutral-800">
+        <div className="flex items-center justify-between pb-5 border-b border-neutral-900">
           <Link
             href="/admin"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Admin Dashboard</span>
@@ -398,7 +380,7 @@ export default function AdminProjectsPage() {
           
           <button
             onClick={openCreateForm}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-xl text-white transition-all shadow-lg shadow-indigo-600/25"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-extrabold rounded-xl text-white transition-all shadow-lg shadow-indigo-600/20"
           >
             <Plus className="w-4 h-4" />
             <span>Add Project</span>
@@ -408,360 +390,250 @@ export default function AdminProjectsPage() {
         {/* Title */}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-500/10 rounded-xl">
+            <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
               <FolderKanban className="w-6 h-6 text-indigo-400" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Manage Projects</h1>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Manage Projects</h1>
           </div>
-          <p className="text-sm text-neutral-400 ml-[3.25rem]">
-            Create, edit, or delete projects showcase details, timelines, technologies, and screenshots.
+          <p className="text-xs text-neutral-400 ml-[3.25rem]">
+            Create, edit, or delete projects showcase details, timelines, technologies, and screenshot galleries.
           </p>
         </div>
 
         {/* Feedback Alert messages */}
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold">
+          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold">
             <Sparkles className="w-4 h-4" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {(errorMsg || localError) && (
-          <div className="flex items-start gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold">
+          <div className="flex items-start gap-2.5 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-400 font-bold">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span style={{ whiteSpace: "pre-line" }}>{localError || errorMsg}</span>
           </div>
         )}
 
-        {/* Project Form Modal */}
-        {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8">
-              
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
-                <h3 className="text-lg font-bold text-white">
-                  {editingProject ? `Edit Project: ${editingProject.title}` : "Create Project Entry"}
-                </h3>
-                <button
-                  onClick={() => {
-                    setIsFormOpen(false);
-                    setLocalError("");
-                  }}
-                  className="p-1 rounded-md text-neutral-450 hover:text-white hover:bg-neutral-800"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Form Input fields */}
-              <form onSubmit={handleSubmit(handleFormSubmit, onInvalid)} className="space-y-6">
-                
-                {/* ID and Title */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Unique ID (lowercase-hyphens)</label>
-                    <input
-                      type="text"
-                      disabled={!!editingProject}
-                      {...register("id")}
-                      placeholder="cineby-hub"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+        {/* List Rows with Smooth Height Collapse on Removal */}
+        <div className="space-y-3">
+          <AnimatePresence>
+            {sortedProjects.map((proj) => (
+              <motion.div
+                key={proj.id}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700/80 rounded-2xl gap-4 transition-all backdrop-blur-md">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <img
+                      src={getScreenshotSrc(proj.screenshots?.[0] || "")}
+                      alt={proj.title}
+                      className="w-16 h-12 rounded-xl object-cover border border-neutral-800 bg-neutral-950 shrink-0"
                     />
-                    {errors.id && <p className="text-xs text-red-500 mt-1">{errors.id.message}</p>}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-extrabold text-white group-hover:text-indigo-400 transition-colors truncate">
+                          {proj.title}
+                        </h3>
+                        {proj.featured && (
+                          <Badge variant="primary" className="text-[9px]">Featured</Badge>
+                        )}
+                        <Badge variant={proj.status === "completed" ? "completed" : proj.status === "in_progress" ? "in_progress" : "planned"} className="text-[9px]">
+                          {proj.status.replace("_", " ").toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-neutral-400 truncate mt-1">{proj.short_description}</p>
+                    </div>
                   </div>
 
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Project Title</label>
-                    <input
-                      type="text"
-                      {...register("title")}
-                      onBlur={(e) => {
-                        register("title").onBlur(e);
-                        if (!watch("id")) setValue("id", slugify(e.target.value));
-                      }}
-                      placeholder="My Streaming App"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
-                  </div>
-                </div>
-
-                {/* Short and Full Descriptions */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Short Description (Summary)</label>
-                    <input
-                      type="text"
-                      {...register("short_description")}
-                      placeholder="A cinematic streaming hub for discovery..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.short_description && <p className="text-xs text-red-500 mt-1">{errors.short_description.message}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Full Description</label>
-                    <textarea
-                      rows={4}
-                      {...register("description")}
-                      placeholder="Provide a comprehensive summary of project, architecture, components, features..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
-                  </div>
-                </div>
-
-                {/* Status and dates */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Status</label>
-                    <select
-                      {...register("status")}
-                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="completed">Completed</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="planned">Planned</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Start Date</label>
-                    <input
-                      type="date"
-                      {...register("start_date")}
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">End Date (optional)</label>
-                    <input
-                      type="date"
-                      {...register("end_date")}
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-355 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* External links */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Live Demonstration URL</label>
-                    <input
-                      type="text"
-                      {...register("live_url")}
-                      placeholder="https://..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">GitHub Repository URL</label>
-                    <input
-                      type="text"
-                      {...register("github_repo_url")}
-                      placeholder="https://..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                    />
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
                     <button
-                      type="button"
-                      onClick={() => {
-                        const url = watch("github_repo_url");
-                        if (url) autoFillRepo(url);
-                      }}
-                      className="mt-1.5 text-xs font-semibold text-indigo-400 hover:text-indigo-300"
+                      onClick={() => openEditForm(proj)}
+                      className="p-2 bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
                     >
-                      Auto-fill from GitHub
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(proj)}
+                      className="p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-rose-400 transition-all text-xs font-bold flex items-center gap-1.5 border border-rose-500/20"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
                     </button>
                   </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">LinkedIn Post URL</label>
-                    <input
-                      type="text"
-                      {...register("linkedin_post_url")}
-                      placeholder="https://..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-355 focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
                 </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
 
-                {/* Multi-select Developer List */}
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                    Assign Developers
-                  </label>
-                  <div className="flex flex-wrap gap-2.5">
-                    {developersData.map((dev) => {
-                      const isSelected = selectedDevIds.includes(dev.id);
-                      return (
-                        <button
-                          type="button"
-                          key={dev.id}
-                          onClick={() => toggleDeveloperSelection(dev.id)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                            isSelected
-                              ? "bg-indigo-600/10 border-indigo-500 text-indigo-400"
-                              : "bg-neutral-950 border-neutral-850 text-neutral-400 hover:text-white"
-                          }`}
-                        >
-                          <img
-                            src={dev.avatar}
-                            alt={dev.name}
-                            className="w-5 h-5 rounded-full object-cover"
-                          />
-                          <span>{dev.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-neutral-500">Tip: a GitHub repository URL auto-fills the description, short summary, and tech stack when available. The ID is generated from the title if left blank.</p>
-
-                {/* Tech stack tags */}
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                    Technology Stack (Comma Separated)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="React, TypeScript, CSS, Node.js"
-                    value={(watch("tech_stack") || []).join(", ")}
-                    onChange={(e) => {
-                      const list = e.target.value.split(",").map((t) => t.trim()).filter(Boolean);
-                      setValue("tech_stack", list, { shouldValidate: true });
-                    }}
-                    className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                  />
-                  {errors.tech_stack && <p className="text-xs text-red-500 mt-1">{errors.tech_stack.message}</p>}
-                </div>
-
-                {/* Screenshot Uploader Integration */}
-                <div className="border-t border-neutral-850 pt-5">
-                  <ScreenshotUploader
-                    screenshots={screenshotsList}
-                    onChange={(list) => setScreenshotsList(list)}
-                    pendingFiles={pendingFiles}
-                    onAddPending={(file) => setPendingFiles((prev) => [...prev, file])}
-                    onRemovePending={(fileName) => setPendingFiles((prev) => prev.filter((f) => f.fileName !== fileName))}
-                    isUploading={status === "loading"}
-                  />
-                </div>
-
-                {/* Featured Switch */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="featured-proj-checkbox"
-                    {...register("featured")}
-                    className="w-4.5 h-4.5 accent-indigo-650 bg-neutral-950 border-neutral-800 rounded focus:ring-indigo-500"
-                  />
-                  <label htmlFor="featured-proj-checkbox" className="text-sm font-semibold text-neutral-305">
-                    Feature on Homepage Showcase Grid
-                  </label>
-                </div>
-
-                {/* Submit panel buttons */}
-                <div className="flex justify-end gap-3 pt-6 border-t border-neutral-800">
+        {/* Project Form Modal */}
+        <AnimatePresence>
+          {isFormOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 relative"
+              >
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
+                  <h3 className="text-xl font-extrabold text-white">
+                    {editingProject ? `Edit Project: ${editingProject.title}` : "Create New Project"}
+                  </h3>
                   <button
-                    type="button"
                     onClick={() => {
                       setIsFormOpen(false);
                       setLocalError("");
                     }}
-                    className="px-4 py-2 bg-neutral-850 hover:bg-neutral-800 text-sm font-semibold rounded-lg text-neutral-300"
+                    className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={status === "loading"}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg text-white disabled:opacity-50"
-                  >
-                    {status === "loading" ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        <span>Save Project</span>
-                      </>
-                    )}
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
 
-              </form>
+                <form onSubmit={handleSubmit(handleFormSubmit, onInvalid)} className="space-y-6">
+                  
+                  {/* ID and Title */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Unique ID</label>
+                      <input
+                        type="text"
+                        disabled={!!editingProject}
+                        {...register("id")}
+                        placeholder="cineby-hub"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-50"
+                      />
+                    </div>
 
-            </div>
-          </div>
-        )}
-
-        {status === "loading" && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
-              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
-              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Existing Projects List Grid with start_date sort */}
-        <div className="grid grid-cols-1 gap-4">
-          {sortedProjects.map((proj) => (
-            <div
-              key={proj.id}
-              className="group bg-neutral-900/40 border border-neutral-850 rounded-2xl p-5 hover:border-indigo-500/30 hover:shadow-lg hover:shadow-indigo-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all duration-300"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-12 bg-neutral-950 rounded-xl overflow-hidden shrink-0 border border-neutral-800 group-hover:border-indigo-500/30 transition-colors">
-                  <img
-                    src={proj.screenshots && proj.screenshots[0] ? getScreenshotSrc(proj.screenshots[0]) : "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120"}
-                    alt={proj.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-sm sm:text-base group-hover:text-indigo-400 transition-colors">{proj.title}</h3>
-                  <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                    <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full font-semibold border border-indigo-500/20 uppercase tracking-wider">
-                      {proj.status.replace("_", " ")}
-                    </span>
-                    <span className="text-[10px] text-neutral-500 font-mono">ID: {proj.id}</span>
-                    {proj.start_date && (
-                      <span className="text-[10px] text-neutral-500 flex items-center gap-1">
-                        <span>·</span>
-                        {new Date(proj.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                      </span>
-                    )}
+                    <div className="md:col-span-2">
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Project Title</label>
+                      <input
+                        type="text"
+                        {...register("title")}
+                        placeholder="Streaming Platform"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Action buttons */}
-              <div className="flex gap-2 self-end sm:self-auto">
-                <button
-                  onClick={() => openEditForm(proj)}
-                  className="p-2 bg-neutral-850 hover:bg-neutral-800 hover:text-indigo-400 text-neutral-450 rounded-xl transition-all border border-neutral-800 hover:border-indigo-500/30"
-                  title="Edit project details"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(proj)}
-                  className="p-2 bg-neutral-850 hover:bg-red-950 hover:text-red-400 text-neutral-450 rounded-xl transition-all border border-neutral-800 hover:border-red-500/30"
-                  title="Delete project entry"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+                  {/* Descriptions */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Short Description</label>
+                      <input
+                        type="text"
+                        {...register("short_description")}
+                        placeholder="A real-time HTML editor built with Flask..."
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Full Markdown Description</label>
+                      <textarea
+                        rows={5}
+                        {...register("description")}
+                        placeholder="Provide detailed description in Markdown format..."
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status, Dates, Featured */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Status</label>
+                      <select
+                        {...register("status")}
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="completed">Completed</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="planned">Planned</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Start Date</label>
+                      <input
+                        type="date"
+                        {...register("start_date")}
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">End Date</label>
+                      <input
+                        type="date"
+                        {...register("end_date")}
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-300 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Developer selection */}
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-2">Assigned Developers</label>
+                    <div className="flex flex-wrap gap-2">
+                      {developersData.map((dev) => {
+                        const isAssigned = selectedDevIds.includes(dev.id);
+                        return (
+                          <button
+                            type="button"
+                            key={dev.id}
+                            onClick={() => toggleDeveloperSelection(dev.id)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                              isAssigned
+                                ? "bg-indigo-600 text-white border-indigo-600"
+                                : "bg-neutral-950 text-neutral-400 border-neutral-800 hover:border-neutral-700"
+                            }`}
+                          >
+                            {dev.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Submit button */}
+                  <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsFormOpen(false)}
+                      className="px-5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={status === "loading"}
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
+                    >
+                      {status === "loading" ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Committing changes...</span>
+                        </>
+                      ) : (
+                        <span>Save & Commit to Repo</span>
+                      )}
+                    </button>
+                  </div>
+
+                </form>
+              </motion.div>
             </div>
-          ))}
-        </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

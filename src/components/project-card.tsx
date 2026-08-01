@@ -1,10 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { Github } from "./brand-icons";
 import { Project } from "@/lib/schemas";
+import { SpotlightCard } from "@/components/ui/spotlight-card";
+import { Badge } from "@/components/ui/badge";
 import developersData from "@data/developers.json";
 
 interface ProjectCardProps {
@@ -12,6 +15,8 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   const getCoverImage = () => {
     if (project.screenshots && project.screenshots.length > 0) {
       const cover = project.screenshots[0];
@@ -22,21 +27,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
     return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20";
-      case "in_progress":
-        return "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20";
-      case "planned":
-        return "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20";
-      default:
-        return "bg-neutral-500/10 text-neutral-700 dark:text-neutral-400 border-neutral-500/20";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    return status.replace("_", " ").toUpperCase();
+  const statusVariant = (status: string) => {
+    if (status === "completed") return "completed";
+    if (status === "in_progress") return "in_progress";
+    if (status === "planned") return "planned";
+    return "neutral";
   };
 
   const assignedDevs = developersData.filter((dev) =>
@@ -44,57 +39,62 @@ export function ProjectCard({ project }: ProjectCardProps) {
   );
 
   return (
-    <div className="group relative flex flex-col h-full bg-white/90 border border-neutral-200 dark:bg-neutral-900/40 dark:border-neutral-800 rounded-xl overflow-hidden backdrop-blur-md hover:border-neutral-300 dark:hover:border-neutral-700/80 hover:-translate-y-1.5 transition-all duration-300">
-      
+    <SpotlightCard className="group flex flex-col h-full hover:-translate-y-1.5 transition-all duration-300">
       {/* Cover Image Container */}
       <div className="relative aspect-video overflow-hidden bg-neutral-950">
-        <img
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-neutral-800/60 animate-pulse" />
+        )}
+        <motion.img
+          layoutId={`project-img-${project.id}`}
           src={getCoverImage()}
           alt={project.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          onLoad={() => setImageLoaded(true)}
+          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          }`}
           loading="lazy"
           decoding="async"
         />
-        <span className={`absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded border ${getStatusColor(project.status)}`}>
-          {getStatusLabel(project.status)}
-        </span>
+        <div className="absolute top-3 right-3 z-10">
+          <Badge variant={statusVariant(project.status)}>
+            {project.status.replace("_", " ").toUpperCase()}
+          </Badge>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-5 flex flex-col justify-between">
+      <div className="flex-1 p-6 flex flex-col justify-between space-y-4">
         <div className="space-y-3">
           <div className="flex flex-wrap gap-1.5">
             {project.tech_stack.slice(0, 3).map((tech) => (
-              <span
-                key={tech}
-                className="text-[10px] font-medium bg-neutral-100 text-neutral-700 dark:bg-neutral-850 dark:text-neutral-300 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800"
-              >
+              <Badge key={tech} variant="tech">
                 {tech}
-              </span>
+              </Badge>
             ))}
             {project.tech_stack.length > 3 && (
-              <span className="text-[10px] font-medium bg-neutral-100 text-neutral-600 dark:bg-neutral-850 dark:text-neutral-400 px-2 py-0.5 rounded-full border border-neutral-200 dark:border-neutral-800">
+              <Badge variant="neutral">
                 +{project.tech_stack.length - 3} more
-              </span>
+              </Badge>
             )}
           </div>
 
           <div>
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1">
+            <h3 className="text-xl font-extrabold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-1">
               <Link href={`/projects/${project.id}`} className="focus:outline-none">
                 <span className="absolute inset-0" aria-hidden="true" />
                 {project.title}
               </Link>
               <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 text-indigo-400" />
             </h3>
-            <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-2 line-clamp-2">
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 mt-2 line-clamp-2 leading-relaxed">
               {project.short_description}
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800/80 pt-4 mt-4">
+        <div className="flex items-center justify-between border-t border-neutral-200 dark:border-neutral-800/80 pt-4">
           <div className="flex -space-x-2 overflow-hidden">
             {assignedDevs.map((dev) => (
               <img
@@ -104,7 +104,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 title={dev.name}
                 loading="lazy"
                 decoding="async"
-                className="inline-block h-6.5 w-6.5 rounded-full ring-2 ring-neutral-200 dark:ring-neutral-900 object-cover"
+                className="inline-block h-7 w-7 rounded-full ring-2 ring-white dark:ring-neutral-900 object-cover"
               />
             ))}
           </div>
@@ -115,7 +115,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 href={project.github_repo_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors p-1"
                 title="View Repository"
               >
                 <Github className="w-4 h-4" />
@@ -126,7 +126,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 href={project.live_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-neutral-700 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
+                className="text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors p-1"
                 title="Live Demonstration"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -135,6 +135,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </SpotlightCard>
   );
 }

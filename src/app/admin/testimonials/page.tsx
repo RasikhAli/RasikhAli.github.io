@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, MessageSquare, AlertCircle, Plus, Trash2, Edit2, Check, X, FileSpreadsheet } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Save, Loader2, MessageSquare, AlertCircle, Plus, Trash2, Edit2, Sparkles, X, FileSpreadsheet } from "lucide-react";
 import { useGitHub } from "@/hooks/use-github";
+import { Badge } from "@/components/ui/badge";
 import siteConfigData from "../../../../data/site-config.json";
 
 interface TestimonialSheet {
@@ -21,8 +22,7 @@ interface TestimonialSheet {
 }
 
 export default function AdminTestimonialsPage() {
-  const router = useRouter();
-  const { updateSiteConfig, status, statusMessage, errorMsg } = useGitHub();
+  const { updateSiteConfig, status, errorMsg } = useGitHub();
   const [successMsg, setSuccessMsg] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [sheets, setSheets] = useState<TestimonialSheet[]>([]);
@@ -32,12 +32,10 @@ export default function AdminTestimonialsPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // Load existing sheets
     const config = siteConfigData as any;
     if (config.testimonials_sheets) {
       setSheets(config.testimonials_sheets);
     } else if (config.testimonials_config) {
-      // Migrate legacy config if present
       setSheets([
         {
           id: "default-sheet",
@@ -105,15 +103,13 @@ export default function AdminTestimonialsPage() {
       return;
     }
 
-    // ID validation
     const idRegex = /^[a-z0-9-]+$/;
     if (!idRegex.test(editingSheet.id)) {
-      alert("ID must be alphanumeric, lowercase, and hyphens only (e.g., 'superior-uni-s25')");
+      alert("ID must be alphanumeric, lowercase, and hyphens only.");
       return;
     }
 
     if (isAdding) {
-      // Check duplicate ID
       if (sheets.some(s => s.id === editingSheet.id)) {
         alert("A sheet with this ID already exists.");
         return;
@@ -131,252 +127,246 @@ export default function AdminTestimonialsPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
+      <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none" />
+      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+        <div className="flex items-center justify-between border-b border-neutral-900 pb-5">
           <Link
             href="/admin"
-            className="flex items-center gap-1.5 text-sm font-semibold text-neutral-450 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Admin Dashboard</span>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-neutral-900 text-neutral-400 border border-neutral-800 px-2.5 py-1 rounded">
-              TESTIMONIALS MANAGER
-            </span>
+            <button
+              onClick={handleAddClick}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-extrabold rounded-xl text-white transition-all shadow-lg shadow-indigo-600/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Sheet</span>
+            </button>
           </div>
         </div>
 
-        {/* Header Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
-              <MessageSquare className="w-8 h-8 text-indigo-400" />
-              <span>Testimonials Configuration</span>
-            </h1>
-            <p className="text-sm text-neutral-450">
-              Manage multiple Google Sheets integrations to fetch and display student reviews on the portfolio.
-            </p>
+        {/* Title */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+              <MessageSquare className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Testimonials Config</h1>
           </div>
-          <button
-            onClick={handleAddClick}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-650 hover:bg-indigo-650/80 text-xs font-semibold rounded-lg shadow transition-colors w-fit"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Google Sheet</span>
-          </button>
+          <p className="text-xs text-neutral-400 ml-[3.25rem]">
+            Manage Google Sheet endpoints, display titles, and field visibility for live student reviews.
+          </p>
         </div>
 
-        {/* Feedback Messages */}
+        {/* Alerts */}
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold animate-in fade-in duration-200">
-            <Check className="w-4 h-4" />
+          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold">
+            <Sparkles className="w-4 h-4" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
-            <AlertCircle className="w-4 h-4" />
+          <div className="flex items-start gap-2.5 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-400 font-bold">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {status === "loading" && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
-              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Publishing updates</h3>
-              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Committing modifications to Github repository..."}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Modal Overlay / Forms */}
-        {editingSheet && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileSpreadsheet className="w-5 h-5 text-indigo-400" />
-                  <span>{isAdding ? "Add New Google Sheet" : "Edit Sheet Configuration"}</span>
-                </h3>
-                <button
-                  onClick={() => setEditingSheet(null)}
-                  className="text-neutral-450 hover:text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <form onSubmit={handleFormSubmit} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Unique ID (Hyphenated, Lowercase)</label>
-                    <input
-                      type="text"
-                      value={editingSheet.id || ""}
-                      disabled={isEditing}
-                      onChange={(e) => setEditingSheet({ ...editingSheet, id: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                      placeholder="e.g. superior-university-s25"
-                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Section Heading / Title</label>
-                    <input
-                      type="text"
-                      value={editingSheet.title || ""}
-                      onChange={(e) => setEditingSheet({ ...editingSheet, title: e.target.value })}
-                      placeholder="e.g. Students Testimonial"
-                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Google Sheet sharing URL</label>
-                  <input
-                    type="url"
-                    value={editingSheet.sheet_url || ""}
-                    onChange={(e) => setEditingSheet({ ...editingSheet, sheet_url: e.target.value })}
-                    placeholder="https://docs.google.com/spreadsheets/d/.../edit?usp=sharing"
-                    className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-805 rounded-lg text-sm text-neutral-305 focus:outline-none focus:border-indigo-500"
-                    required
-                  />
-                  <p className="text-[10px] text-neutral-500 mt-1">Make sure anyone with the link can view the sheet.</p>
-                </div>
-
-                <div className="space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-1">Display columns & elements</label>
-                  <div className="grid grid-cols-2 gap-3 p-4 bg-neutral-950/60 border border-neutral-805 rounded-lg">
-                    {[
-                      { key: "show_rating", label: "Show Rating Stars" },
-                      { key: "show_feedback", label: "Show Positive Feedback" },
-                      { key: "show_dislike", label: "Show Dislikes / Critique" },
-                      { key: "show_skills", label: "Show Gained Skills" },
-                      { key: "show_course", label: "Show Course Names" },
-                      { key: "show_linkedin", label: "Show LinkedIn Icons" },
-                      { key: "show_github", label: "Show GitHub Icons" }
-                    ].map((item) => (
-                      <label key={item.key} className="flex items-center gap-2.5 text-xs text-neutral-305 hover:text-white cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={!!(editingSheet as any)[item.key]}
-                          onChange={(e) => setEditingSheet({ ...editingSheet, [item.key]: e.target.checked })}
-                          className="rounded border-neutral-805 bg-neutral-950 text-indigo-650 focus:ring-indigo-500/20"
-                        />
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-neutral-800">
-                  <button
-                    type="button"
-                    onClick={() => setEditingSheet(null)}
-                    className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold rounded-lg transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-650 hover:bg-indigo-600 text-xs font-semibold rounded-lg shadow transition-colors"
-                  >
-                    Confirm Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Sheets List Cards */}
-        {sheets.length === 0 ? (
-          <div className="text-center py-16 border border-dashed border-neutral-800 bg-neutral-900/10 rounded-2xl space-y-3">
-            <FileSpreadsheet className="w-12 h-12 text-neutral-600 mx-auto" />
-            <h3 className="text-md font-bold text-neutral-400">No sheets configured</h3>
-            <p className="text-xs text-neutral-500 max-w-xs mx-auto">Click "Add Google Sheet" above to link a Google Sheet to retrieve testimonials.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Sheets List with Height Collapse Animation */}
+        <div className="space-y-3">
+          <AnimatePresence>
             {sheets.map((sheet) => (
-              <div
+              <motion.div
                 key={sheet.id}
-                className="bg-neutral-900/30 border border-neutral-850 p-6 rounded-2xl flex flex-col justify-between hover:border-neutral-700 transition-all shadow-md"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-neutral-850 pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">{sheet.title}</h3>
-                      <span className="text-[10px] text-indigo-400 font-mono mt-0.5 block">{sheet.id}</span>
+                <div className="group flex flex-col sm:flex-row sm:items-center justify-between p-6 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700/80 rounded-2xl gap-4 transition-all backdrop-blur-md">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="p-3 bg-neutral-950 border border-neutral-800 rounded-xl text-emerald-400">
+                      <FileSpreadsheet className="w-6 h-6" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditClick(sheet)}
-                        className="p-1.5 hover:bg-neutral-800 hover:text-white rounded text-neutral-450 transition-colors"
-                        title="Edit Configuration"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(sheet.id)}
-                        className="p-1.5 hover:bg-red-955/20 hover:text-red-400 rounded text-neutral-450 transition-colors"
-                        title="Delete Configuration"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-extrabold text-white group-hover:text-indigo-400 transition-colors truncate">
+                          {sheet.title}
+                        </h3>
+                        <Badge variant="primary" className="text-[9px] font-mono">{sheet.id}</Badge>
+                      </div>
+                      <p className="text-xs text-neutral-400 font-mono truncate mt-1">{sheet.sheet_url}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-xs text-neutral-400">
-                    <p className="truncate"><strong className="text-neutral-500 font-bold uppercase tracking-wider text-[9px] mr-1 block">URL:</strong>{sheet.sheet_url}</p>
-                    <div>
-                      <strong className="text-neutral-500 font-bold uppercase tracking-wider text-[9px] mr-1 block mb-1">Display elements:</strong>
-                      <div className="flex flex-wrap gap-1.5">
-                        {sheet.show_rating && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">Rating</span>}
-                        {sheet.show_feedback && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">Feedback</span>}
-                        {sheet.show_dislike && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">Dislikes</span>}
-                        {sheet.show_skills && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">Skills</span>}
-                        {sheet.show_course && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">Courses</span>}
-                        {sheet.show_linkedin && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">LinkedIn</span>}
-                        {sheet.show_github && <span className="bg-neutral-950 border border-neutral-800 px-2 py-0.5 rounded text-[9px]">GitHub</span>}
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <button
+                      onClick={() => handleEditClick(sheet)}
+                      className="p-2 bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit Config</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(sheet.id)}
+                      className="p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-rose-400 transition-all text-xs font-bold flex items-center gap-1.5 border border-rose-500/20"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
-        )}
+          </AnimatePresence>
+        </div>
 
-        {/* Global Save Trigger */}
-        <div className="flex justify-end pt-6 border-t border-neutral-900">
+        {/* Global Save Action */}
+        <div className="flex justify-end pt-4">
           <button
             onClick={handleSaveAll}
             disabled={status === "loading"}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-650 hover:bg-indigo-600 text-sm font-semibold rounded-lg shadow-lg hover:shadow-indigo-500/10 transition-all text-white disabled:opacity-50"
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
           >
             {status === "loading" ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Committing all configurations...</span>
+                <span>Committing to repository...</span>
               </>
             ) : (
               <>
                 <Save className="w-4 h-4" />
-                <span>Save configurations to Git</span>
+                <span>Save & Commit Configuration</span>
               </>
             )}
           </button>
         </div>
+
+        {/* Edit / Add Sheet Modal */}
+        <AnimatePresence>
+          {(isAdding || isEditing) && editingSheet && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 relative"
+              >
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
+                  <h3 className="text-xl font-extrabold text-white">
+                    {isAdding ? "Add Google Sheet Config" : `Edit Sheet: ${editingSheet.title}`}
+                  </h3>
+                  <button
+                    onClick={() => {
+                      setIsAdding(false);
+                      setIsEditing(false);
+                      setEditingSheet(null);
+                    }}
+                    className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleFormSubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Sheet ID (hyphenated)</label>
+                      <input
+                        type="text"
+                        disabled={isEditing}
+                        value={editingSheet.id || ""}
+                        onChange={(e) => setEditingSheet({ ...editingSheet, id: e.target.value })}
+                        placeholder="superior-lab-s25"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Display Title</label>
+                      <input
+                        type="text"
+                        value={editingSheet.title || ""}
+                        onChange={(e) => setEditingSheet({ ...editingSheet, title: e.target.value })}
+                        placeholder="Students Testimonials"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Google Sheet CSV / Export URL</label>
+                    <input
+                      type="url"
+                      value={editingSheet.sheet_url || ""}
+                      onChange={(e) => setEditingSheet({ ...editingSheet, sheet_url: e.target.value })}
+                      placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv"
+                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 font-mono"
+                      required
+                    />
+                  </div>
+
+                  {/* Toggles */}
+                  <div className="space-y-3 pt-3 border-t border-neutral-800">
+                    <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider">Field Display Toggles</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { key: "show_rating", label: "Show Rating Stars" },
+                        { key: "show_feedback", label: "Show Feedback Text" },
+                        { key: "show_dislike", label: "Show Dislike Section" },
+                        { key: "show_skills", label: "Show Skills Gained" },
+                        { key: "show_course", label: "Show Course Code" },
+                        { key: "show_linkedin", label: "Show LinkedIn Link" },
+                        { key: "show_github", label: "Show GitHub Link" },
+                      ].map((t) => (
+                        <label key={t.key} className="flex items-center gap-2 text-xs font-semibold text-neutral-300 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={(editingSheet as any)[t.key] ?? false}
+                            onChange={(e) => setEditingSheet({ ...editingSheet, [t.key]: e.target.checked })}
+                            className="rounded border-neutral-800 bg-neutral-950 text-indigo-600 focus:ring-indigo-500"
+                          />
+                          <span>{t.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAdding(false);
+                        setIsEditing(false);
+                        setEditingSheet(null);
+                      }}
+                      className="px-5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-indigo-600/20"
+                    >
+                      Save Sheet Config
+                    </button>
+                  </div>
+
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

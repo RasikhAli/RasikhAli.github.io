@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2, Settings, AlertCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Settings as SettingsIcon, AlertCircle, Sparkles } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { siteConfigSchema, SiteConfig } from "@/lib/schemas";
@@ -20,11 +20,9 @@ export default function AdminSettingsPage() {
     setIsClient(true);
   }, []);
 
-  // Form Setup
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<SiteConfig>({
     resolver: zodResolver(siteConfigSchema) as any,
@@ -33,7 +31,6 @@ export default function AdminSettingsPage() {
 
   const onSubmit = async (data: SiteConfig) => {
     setSuccessMsg("");
-    // Ensure keywords list is properly formatted as array if it got edited as string
     if (typeof data.seo_defaults.keywords === "string") {
       data.seo_defaults.keywords = (data.seo_defaults.keywords as string)
         .split(",")
@@ -44,7 +41,6 @@ export default function AdminSettingsPage() {
     const success = await updateSiteConfig(data);
     if (success) {
       setSuccessMsg("Site configuration committed and saved successfully!");
-      // Flash success message
       setTimeout(() => setSuccessMsg(""), 4000);
     }
   };
@@ -52,319 +48,180 @@ export default function AdminSettingsPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
+      <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none" />
+      <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+        <div className="flex items-center justify-between border-b border-neutral-900 pb-5">
           <Link
             href="/admin"
-            className="flex items-center gap-1.5 text-sm font-semibold text-neutral-450 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Admin Dashboard</span>
           </Link>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-neutral-900 text-neutral-400 border border-neutral-800 px-2.5 py-1 rounded">
-              SITE SETTINGS EDITOR
-            </span>
-          </div>
         </div>
 
         {/* Header Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <Settings className="w-8 h-8 text-indigo-400" />
-            <span>Site Configuration</span>
-          </h1>
-          <p className="text-sm text-neutral-450">
-            Edit details like Site Headline, socials, resume file link, and default SEO parameters.
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+              <SettingsIcon className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Site Settings</h1>
+          </div>
+          <p className="text-xs text-neutral-400 ml-[3.25rem]">
+            Manage portfolio owner details, bio headers, contact emails, social links, and SEO metadata.
           </p>
         </div>
 
         {/* Feedback Messages */}
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold animate-in fade-in duration-200">
             <Sparkles className="w-4 h-4" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-400 font-bold animate-in fade-in duration-200">
             <AlertCircle className="w-4 h-4" />
             <span>{errorMsg}</span>
           </div>
         )}
 
         {status === "loading" && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+            <div className="w-full max-w-md rounded-3xl border border-neutral-800 bg-neutral-900 p-8 text-center shadow-2xl">
               <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
-              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
+              <h3 className="text-lg font-extrabold text-white">Publishing Changes</h3>
+              <p className="mt-2 text-xs text-neutral-400">{statusMessage || "Committing your settings to GitHub..."}</p>
             </div>
           </div>
         )}
 
         {/* Settings Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-neutral-900/20 border border-neutral-850 p-8 rounded-2xl backdrop-blur-md">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-neutral-900/40 border border-neutral-800 p-8 rounded-3xl backdrop-blur-md shadow-xl">
           
           {/* Section: Basic Settings */}
           <div className="space-y-5">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              Basic Config
+            <h3 className="text-xs font-extrabold text-indigo-400 uppercase tracking-wider border-b border-neutral-800 pb-2">
+              Basic Profile Config
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Portfolio Owner Name</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Portfolio Owner Name</label>
                 <input
                   type="text"
                   {...register("portfolio_owner_name")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 />
-                {errors.portfolio_owner_name && <p className="text-xs text-red-500 mt-1">{errors.portfolio_owner_name.message}</p>}
+                {errors.portfolio_owner_name && <p className="text-xs text-rose-500 mt-1">{errors.portfolio_owner_name.message}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Contact Email</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Contact Email</label>
                 <input
                   type="email"
                   {...register("contact_email")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 />
-                {errors.contact_email && <p className="text-xs text-red-500 mt-1">{errors.contact_email.message}</p>}
+                {errors.contact_email && <p className="text-xs text-rose-500 mt-1">{errors.contact_email.message}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Site Title</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Site Title</label>
                 <input
                   type="text"
                   {...register("site_title")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 />
-                {errors.site_title && <p className="text-xs text-red-500 mt-1">{errors.site_title.message}</p>}
+                {errors.site_title && <p className="text-xs text-rose-500 mt-1">{errors.site_title.message}</p>}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Site Subtitle</label>
-                <input
-                  type="text"
-                  {...register("site_subtitle")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.site_subtitle && <p className="text-xs text-red-500 mt-1">{errors.site_subtitle.message}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Hero Copy */}
-          <div className="space-y-5 pt-4">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              Hero Section Copy
-            </h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Hero Headline</label>
-                <input
-                  type="text"
-                  {...register("hero_headline")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.hero_headline && <p className="text-xs text-red-500 mt-1">{errors.hero_headline.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Hero Description</label>
-                <textarea
-                  rows={3}
-                  {...register("hero_description")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.hero_description && <p className="text-xs text-red-500 mt-1">{errors.hero_description.message}</p>}
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Connections & URLs */}
-          <div className="space-y-5 pt-4">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              Social Handles & Resume URL
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">GitHub Profile URL</label>
-                <input
-                  type="text"
-                  {...register("github_url")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.github_url && <p className="text-xs text-red-500 mt-1">{errors.github_url.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">LinkedIn Profile URL</label>
-                <input
-                  type="text"
-                  {...register("linkedin_url")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.linkedin_url && <p className="text-xs text-red-500 mt-1">{errors.linkedin_url.message}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Twitter Profile URL</label>
-                <input
-                  type="text"
-                  {...register("twitter_url")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.twitter_url && <p className="text-xs text-red-500 mt-1">{errors.twitter_url.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Resume File URL</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Resume File URL</label>
                 <input
                   type="text"
                   {...register("resume_url")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
                 />
-                {errors.resume_url && <p className="text-xs text-red-500 mt-1">{errors.resume_url.message}</p>}
               </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Hero Profile Bio</label>
+              <textarea
+                rows={3}
+                {...register("profile_bio")}
+                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              />
             </div>
           </div>
 
-          {/* Section: Profile Customization */}
+          {/* Section: Social Profiles */}
           <div className="space-y-5 pt-4">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              Profile Customization
+            <h3 className="text-xs font-extrabold text-indigo-400 uppercase tracking-wider border-b border-neutral-800 pb-2">
+              Social Profiles & Handles
             </h3>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Profile Bio</label>
-                <textarea
-                  rows={3}
-                  {...register("profile_bio")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.profile_bio && <p className="text-xs text-red-500 mt-1">{errors.profile_bio.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">GitHub Username (for stats embeds)</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">GitHub URL</label>
                 <input
-                  type="text"
-                  {...register("github_username")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  type="url"
+                  {...register("github_url")}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
                 />
-                {errors.github_username && <p className="text-xs text-red-500 mt-1">{errors.github_username.message}</p>}
               </div>
-
               <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Typing Animation Lines (comma separated)</label>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">LinkedIn URL</label>
                 <input
-                  type="text"
-                  defaultValue={((siteConfigData as any).profile_typing_lines || []).join(", ")}
-                  onChange={(e) => setValue("profile_typing_lines", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+                  type="url"
+                  {...register("linkedin_url")}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
                 />
-                <p className="text-xs text-neutral-600 mt-1">Each line will cycle in the typing animation on the homepage.</p>
+              </div>
+              <div>
+                <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Twitter / X URL</label>
+                <input
+                  type="url"
+                  {...register("twitter_url")}
+                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
+                />
               </div>
             </div>
           </div>
 
           {/* Section: SEO Defaults */}
           <div className="space-y-5 pt-4">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              SEO Parameters & Metadata
+            <h3 className="text-xs font-extrabold text-indigo-400 uppercase tracking-wider border-b border-neutral-800 pb-2">
+              SEO & OpenGraph Metadata
             </h3>
-            
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">SEO Title Tag</label>
-                  <input
-                    type="text"
-                    {...register("seo_defaults.title")}
-                    className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                  />
-                  {errors.seo_defaults?.title && <p className="text-xs text-red-500 mt-1">{errors.seo_defaults.title.message}</p>}
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">SEO OpenGraph Image URL</label>
-                  <input
-                    type="text"
-                    {...register("seo_defaults.og_image")}
-                    className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                  />
-                  {errors.seo_defaults?.og_image && <p className="text-xs text-red-500 mt-1">{errors.seo_defaults.og_image.message}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">SEO Meta Description</label>
-                <textarea
-                  rows={2}
-                  {...register("seo_defaults.description")}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-                {errors.seo_defaults?.description && <p className="text-xs text-red-500 mt-1">{errors.seo_defaults.description.message}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">SEO Keywords (Comma Separated)</label>
-                <input
-                  type="text"
-                  defaultValue={siteConfigData.seo_defaults.keywords.join(", ")}
-                  onChange={(e) => setValue("seo_defaults.keywords", e.target.value.split(",").map(t => t.trim()))}
-                  className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
-          </div>
-          {/* Section: Footer Content */}
-          <div className="space-y-5 pt-4">
-            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider border-b border-neutral-850 pb-2">
-              Footer Content
-            </h3>
             <div>
-              <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Footer Copyright / Text</label>
-              <input
-                type="text"
-                {...register("footer_content")}
-                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
+              <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Meta Description</label>
+              <textarea
+                rows={2}
+                {...register("seo_defaults.description")}
+                className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
               />
-              {errors.footer_content && <p className="text-xs text-red-500 mt-1">{errors.footer_content.message}</p>}
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end pt-6 border-t border-neutral-850">
+          {/* Submit */}
+          <div className="flex justify-end pt-4 border-t border-neutral-800">
             <button
               type="submit"
               disabled={status === "loading"}
-              className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg shadow-lg hover:shadow-indigo-500/10 transition-all text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
             >
-              {status === "loading" ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Committing settings...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Save site config</span>
-                </>
-              )}
+              <Save className="w-4 h-4" />
+              <span>Save & Commit Site Settings</span>
             </button>
           </div>
 

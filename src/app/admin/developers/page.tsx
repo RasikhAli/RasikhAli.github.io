@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Plus, Edit2, Trash2, X, Users, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Plus, Edit2, Trash2, X, Users, AlertCircle, Loader2, Sparkles, Wand2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { developerSchema, Developer } from "@/lib/schemas";
 import { useGitHub } from "@/hooks/use-github";
 import { Octokit } from "octokit";
+import { Badge } from "@/components/ui/badge";
 import initialDevelopers from "../../../../data/developers.json";
 
 function slugify(value: string) {
@@ -15,7 +17,7 @@ function slugify(value: string) {
 }
 
 export default function AdminDevelopersPage() {
-  const { updateDevelopersList, status, statusMessage, errorMsg, token, repoOwner } = useGitHub();
+  const { updateDevelopersList, status, errorMsg, token } = useGitHub();
   
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [editingDev, setEditingDev] = useState<Developer | null>(null);
@@ -25,7 +27,6 @@ export default function AdminDevelopersPage() {
 
   useEffect(() => {
     setIsClient(true);
-    // Load from local storage sync fallback if existing, or default file import
     setDevelopers(initialDevelopers as Developer[]);
   }, []);
 
@@ -84,10 +85,8 @@ export default function AdminDevelopersPage() {
         } catch {
           data.skills = [];
         }
-      } else if (urlToUse.includes("linkedin.com")) {
-        throw new Error("LinkedIn auto-fill is not available without OAuth. Please fill in avatar, bio, and skills manually.");
       } else {
-        throw new Error("Please provide a GitHub or LinkedIn profile URL for auto-fill.");
+        throw new Error("Please provide a GitHub profile URL for auto-fill.");
       }
 
       if (!watch("avatar") && data.avatar) setValue("avatar", data.avatar);
@@ -130,17 +129,14 @@ export default function AdminDevelopersPage() {
     const timestamp = new Date().toISOString();
 
     if (editingDev) {
-      // Edit mode
       data.updated_at = timestamp;
       updatedList = developers.map((d) => (d.id === editingDev.id ? data : d));
     } else {
-      // Create mode
       data.created_at = timestamp;
       data.updated_at = timestamp;
       
-      // Check if id already exists
       if (developers.some((d) => d.id === data.id)) {
-        alert("A developer with this ID already exists. Please choose a unique lowercase ID.");
+        alert("A developer with this ID already exists.");
         return;
       }
       updatedList = [...developers, data];
@@ -151,13 +147,13 @@ export default function AdminDevelopersPage() {
     if (success) {
       setDevelopers(updatedList);
       setIsFormOpen(false);
-      setSuccessMsg(`Developer ${data.name} saved and committed successfully!`);
+      setSuccessMsg(`Developer "${data.name}" saved successfully!`);
       setTimeout(() => setSuccessMsg(""), 4000);
     }
   };
 
   const handleDelete = async (dev: Developer) => {
-    if (!confirm(`Are you sure you want to delete ${dev.name}? This will commit changes directly to the repository.`)) {
+    if (!confirm(`Are you sure you want to delete ${dev.name}?`)) {
       return;
     }
 
@@ -166,7 +162,7 @@ export default function AdminDevelopersPage() {
     const success = await updateDevelopersList(updatedList, "Delete", dev.name);
     if (success) {
       setDevelopers(updatedList);
-      setSuccessMsg(`Developer ${dev.name} removed successfully!`);
+      setSuccessMsg(`Developer "${dev.name}" removed successfully!`);
       setTimeout(() => setSuccessMsg(""), 4000);
     }
   };
@@ -174,14 +170,15 @@ export default function AdminDevelopersPage() {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white py-16 selection:bg-indigo-500/30">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+    <div className="min-h-screen bg-neutral-950 text-white selection:bg-indigo-500/30">
+      <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.08),transparent)] pointer-events-none" />
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 space-y-10">
         
         {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between border-b border-neutral-900 pb-4">
+        <div className="flex items-center justify-between pb-5 border-b border-neutral-900">
           <Link
             href="/admin"
-            className="flex items-center gap-1.5 text-sm font-semibold text-neutral-450 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Admin Dashboard</span>
@@ -189,7 +186,7 @@ export default function AdminDevelopersPage() {
           
           <button
             onClick={openCreateForm}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold rounded-lg text-white transition-colors shadow"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-xs font-extrabold rounded-xl text-white transition-all shadow-lg shadow-indigo-600/20"
           >
             <Plus className="w-4 h-4" />
             <span>Add Developer</span>
@@ -198,301 +195,219 @@ export default function AdminDevelopersPage() {
 
         {/* Title */}
         <div className="space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <Users className="w-8 h-8 text-indigo-400" />
-            <span>Manage Developers</span>
-          </h1>
-          <p className="text-sm text-neutral-455">
-            Create profiles, designations, biographies, and skills lists for active developers.
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+              <Users className="w-6 h-6 text-indigo-400" />
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Manage Developers</h1>
+          </div>
+          <p className="text-xs text-neutral-400 ml-[3.25rem]">
+            Create profiles, design roles/designations, write bios, and detail key skill lists.
           </p>
         </div>
 
-        {/* Feedback Alert messages */}
+        {/* Alerts */}
         {successMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 font-semibold animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-400 font-bold">
             <Sparkles className="w-4 h-4" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {errorMsg && (
-          <div className="flex items-center gap-2.5 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-sm text-red-400 font-semibold animate-in fade-in duration-200">
-            <AlertCircle className="w-4 h-4" />
+          <div className="flex items-start gap-2.5 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-xs text-rose-400 font-bold">
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
 
-        {/* Developer Creation/Editing Modal Overlay */}
-        {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 md:p-8 animate-in zoom-in-95 duration-200">
-              
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
-                <h3 className="text-lg font-bold text-white">
-                  {editingDev ? `Edit Profile: ${editingDev.name}` : "Create Developer Profile"}
-                </h3>
-                <button
-                  onClick={() => setIsFormOpen(false)}
-                  className="p-1 rounded-md text-neutral-450 hover:text-white hover:bg-neutral-800"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Developer Input Form */}
-              <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-                
-                {/* ID and Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Unique ID (e.g. rasikh-ali)</label>
-                    <input
-                      type="text"
-                      disabled={!!editingDev}
-                      {...register("id")}
-                      placeholder="lowercase-with-hyphens"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+        {/* Rows with Animated Deletion Collapse */}
+        <div className="space-y-3">
+          <AnimatePresence>
+            {developers.map((dev) => (
+              <motion.div
+                key={dev.id}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="group flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-neutral-900/60 border border-neutral-800 hover:border-neutral-700/80 rounded-2xl gap-4 transition-all backdrop-blur-md">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <img
+                      src={dev.avatar}
+                      alt={dev.name}
+                      className="w-12 h-12 rounded-full object-cover border border-neutral-800 shrink-0"
                     />
-                    {errors.id && <p className="text-xs text-red-500 mt-1">{errors.id.message}</p>}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-base font-extrabold text-white group-hover:text-indigo-400 transition-colors truncate">
+                          {dev.name}
+                        </h3>
+                        {dev.featured && (
+                          <Badge variant="primary" className="text-[9px]">Featured</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mt-0.5">{dev.designation}</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Display Name</label>
-                    <input
-                      type="text"
-                      {...register("name")}
-                      onBlur={(e) => {
-                        register("name").onBlur(e);
-                        if (!watch("id")) setValue("id", slugify(e.target.value));
-                      }}
-                      placeholder="John Doe"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <button
+                      onClick={() => openEditForm(dev)}
+                      className="p-2 bg-neutral-800 hover:bg-neutral-700 rounded-xl text-neutral-300 hover:text-white transition-all text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(dev)}
+                      className="p-2 bg-rose-500/10 hover:bg-rose-500/20 rounded-xl text-rose-400 transition-all text-xs font-bold flex items-center gap-1.5 border border-rose-500/20"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
                   </div>
                 </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
 
-                {/* Designation and Avatar */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Designation / Role</label>
-                    <input
-                      type="text"
-                      {...register("designation")}
-                      placeholder="Backend Lead"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.designation && <p className="text-xs text-red-500 mt-1">{errors.designation.message}</p>}
+        {/* Form Modal */}
+        <AnimatePresence>
+          {isFormOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="bg-neutral-900 border border-neutral-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 sm:p-8 relative"
+              >
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-6">
+                  <h3 className="text-xl font-extrabold text-white">
+                    {editingDev ? `Edit Developer: ${editingDev.name}` : "Create Developer Entry"}
+                  </h3>
+                  <button
+                    onClick={() => setIsFormOpen(false)}
+                    className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Developer Name</label>
+                      <input
+                        type="text"
+                        {...register("name")}
+                        placeholder="Rasikh Ali"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Designation / Role</label>
+                      <input
+                        type="text"
+                        {...register("designation")}
+                        placeholder="Software Engineer & Lecturer"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Avatar Image URL</label>
+                    <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Avatar Image URL</label>
                     <input
                       type="text"
                       {...register("avatar")}
-                      placeholder="https://..."
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
+                      placeholder="https://github.com/RasikhAli.png"
+                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      required
                     />
-                    {errors.avatar && <p className="text-xs text-red-500 mt-1">{errors.avatar.message}</p>}
-                  </div>
-                </div>
-
-                {/* Biography */}
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Developer Bio</label>
-                  <textarea
-                    rows={3}
-                    {...register("bio")}
-                    placeholder="Provide a short professional summary..."
-                    className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                  />
-                  {errors.bio && <p className="text-xs text-red-500 mt-1">{errors.bio.message}</p>}
-                </div>
-
-                {/* Connections Links */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Email Address</label>
-                    <input
-                      type="email"
-                      {...register("email")}
-                      placeholder="name@domain.com"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">GitHub URL</label>
-                    <input
-                      type="text"
-                      {...register("github_url")}
-                      onBlur={(e) => {
-                        register("github_url").onBlur(e);
-                        if (e.target.value) autoFillProfile(e.target.value);
-                      }}
-                      placeholder="https://github.com/username"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-350 focus:outline-none focus:border-indigo-500"
+                    <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">Biography & Summary</label>
+                    <textarea
+                      rows={4}
+                      {...register("bio")}
+                      placeholder="Passionate engineer building software..."
+                      className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                      required
                     />
-                    {errors.github_url && <p className="text-xs text-red-500 mt-1">{errors.github_url.message}</p>}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">LinkedIn URL</label>
-                    <input
-                      type="text"
-                      {...register("linkedin_url")}
-                      onBlur={(e) => {
-                        register("linkedin_url").onBlur(e);
-                        if (e.target.value) autoFillProfile(e.target.value);
-                      }}
-                      placeholder="https://linkedin.com/in/username"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-355 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.linkedin_url && <p className="text-xs text-red-500 mt-1">{errors.linkedin_url.message}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">Portfolio URL</label>
-                    <input
-                      type="text"
-                      {...register("portfolio_url")}
-                      placeholder="https://dev.domain"
-                      className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-355 focus:outline-none focus:border-indigo-500"
-                    />
-                    {errors.portfolio_url && <p className="text-xs text-red-500 mt-1">{errors.portfolio_url.message}</p>}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">GitHub Profile URL</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          {...register("github_url")}
+                          placeholder="https://github.com/RasikhAli"
+                          className="flex-1 px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => autoFillProfile()}
+                          className="px-3 py-2.5 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-xs font-bold border border-indigo-500/20 flex items-center gap-1 shrink-0"
+                          title="Auto-fill profile from GitHub"
+                        >
+                          <Wand2 className="w-3.5 h-3.5" />
+                          <span>Fetch</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-extrabold text-neutral-400 uppercase tracking-wider mb-1.5">LinkedIn Profile URL</label>
+                      <input
+                        type="text"
+                        {...register("linkedin_url")}
+                        placeholder="https://linkedin.com/in/rasikhali"
+                        className="w-full px-3.5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-neutral-200 focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <p className="text-[11px] text-neutral-500">Tip: GitHub or LinkedIn links auto-fill avatar, bio, and skills when available. Unique ID is generated from the name if you leave it blank.</p>
+                  <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-800">
+                    <button
+                      type="button"
+                      onClick={() => setIsFormOpen(false)}
+                      className="px-5 py-2.5 bg-neutral-950 border border-neutral-800 rounded-xl text-xs font-bold text-neutral-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={status === "loading"}
+                      className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-extrabold transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
+                    >
+                      {status === "loading" ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Committing changes...</span>
+                        </>
+                      ) : (
+                        <span>Save & Commit to Repo</span>
+                      )}
+                    </button>
+                  </div>
 
-                {/* Skills tags selection */}
-                <div>
-                  <label className="block text-xs font-bold text-neutral-400 uppercase tracking-wider mb-2">
-                    Skills / Core tags (Comma Separated)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="React, Next.js, Node.js, CSS"
-                    defaultValue={editingDev ? editingDev.skills.join(", ") : ""}
-                    onChange={(e) => {
-                      const list = e.target.value.split(",").map((s) => s.trim()).filter(Boolean);
-                      setValue("skills", list);
-                    }}
-                    className="w-full px-3.5 py-2 bg-neutral-950 border border-neutral-850 rounded-lg text-sm text-neutral-300 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                {/* Feature switch */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="featured-checkbox"
-                    {...register("featured")}
-                    className="w-4.5 h-4.5 accent-indigo-650 bg-neutral-950 border-neutral-800 rounded focus:ring-indigo-500"
-                  />
-                  <label htmlFor="featured-checkbox" className="text-sm font-semibold text-neutral-300">
-                    Feature on Homepage Dashboard
-                  </label>
-                </div>
-
-                {/* Submit Panel */}
-                <div className="flex justify-end gap-3 pt-6 border-t border-neutral-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2 bg-neutral-850 hover:bg-neutral-800 text-sm font-semibold rounded-lg text-neutral-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={status === "loading"}
-                    className="flex items-center gap-1.5 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold rounded-lg text-white disabled:opacity-50"
-                  >
-                    {status === "loading" ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4" />
-                        <span>Save Profile</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-              </form>
-
+                </form>
+              </motion.div>
             </div>
-          </div>
-        )}
-
-        {status === "loading" && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-900 p-6 text-center shadow-2xl">
-              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-indigo-400" />
-              <h3 className="text-lg font-semibold text-white">Publishing update</h3>
-              <p className="mt-2 text-sm text-neutral-400">{statusMessage || "Saving your changes and waiting for the GitHub Pages deployment to finish."}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Existing Developers List Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {developers.map((dev) => (
-            <div
-              key={dev.id}
-              className="bg-neutral-900/40 border border-neutral-850 rounded-xl p-5 backdrop-blur-md hover:border-neutral-800 flex items-start justify-between gap-4"
-            >
-              <div className="flex items-center gap-4">
-                <img
-                  src={dev.avatar}
-                  alt={dev.name}
-                  className="w-14 h-14 rounded-full object-cover ring-2 ring-neutral-800"
-                />
-                <div>
-                  <h3 className="font-bold text-white text-base">{dev.name}</h3>
-                  <p className="text-xs text-indigo-400 font-medium mt-0.5">{dev.designation}</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {dev.skills.slice(0, 3).map((s) => (
-                      <span key={s} className="text-[10px] bg-neutral-850 text-neutral-450 px-1.5 py-0.5 rounded">
-                        {s}
-                      </span>
-                    ))}
-                    {dev.skills.length > 3 && (
-                      <span className="text-[10px] bg-neutral-850 text-neutral-500 px-1.5 py-0.5 rounded">
-                        +{dev.skills.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Action operations buttons */}
-              <div className="flex gap-1">
-                <button
-                  onClick={() => openEditForm(dev)}
-                  className="p-2 bg-neutral-850 hover:bg-neutral-800 hover:text-indigo-400 text-neutral-450 rounded-lg transition-colors border border-neutral-800"
-                  title="Edit profile"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(dev)}
-                  className="p-2 bg-neutral-850 hover:bg-red-950 hover:text-red-400 text-neutral-450 rounded-lg transition-colors border border-neutral-800"
-                  title="Delete developer profile"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+          )}
+        </AnimatePresence>
 
       </div>
     </div>

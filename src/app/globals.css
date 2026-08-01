@@ -26,10 +26,17 @@ body {
   overflow-x: hidden;
 }
 
+/* Hide stray Next.js dev overlay indicator ("N" bubble) */
+nextjs-portal,
+#nextjs-dev-tools,
+[data-nextjs-toast] {
+  display: none !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -37,12 +44,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: rgba(161, 161, 170, 0.3);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: rgba(161, 161, 170, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(63, 63, 70, 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(82, 82, 91, 0.8);
 }
 
 /* Glassmorphism Utilities */
@@ -62,4 +77,19 @@ body {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-33.333%); }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none !important;
+  }
 }
