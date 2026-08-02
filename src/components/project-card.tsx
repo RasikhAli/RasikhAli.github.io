@@ -10,6 +10,8 @@ import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { Badge } from "@/components/ui/badge";
 import developersData from "@data/developers.json";
 
+import { TechStackPlaceholder } from "./tech-stack-placeholder";
+
 interface ProjectCardProps {
   project: Project;
 }
@@ -17,14 +19,15 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
 
+  const hasScreenshots = Boolean(project.screenshots && project.screenshots.length > 0 && project.screenshots[0]);
+
   const getCoverImage = () => {
-    if (project.screenshots && project.screenshots.length > 0) {
+    if (hasScreenshots) {
       const cover = project.screenshots[0];
-      if (!cover) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
       if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
       return `/${cover}`;
     }
-    return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
+    return "";
   };
 
   const statusVariant = (status: string) => {
@@ -40,22 +43,28 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <SpotlightCard className="group flex flex-col h-full hover:-translate-y-1.5 transition-all duration-300">
-      {/* Cover Image Container */}
+      {/* Cover Image / Tech Stack Placeholder Container */}
       <div className="relative aspect-video overflow-hidden bg-neutral-950">
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-neutral-800/60 animate-pulse" />
+        {hasScreenshots ? (
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-neutral-800/60 animate-pulse" />
+            )}
+            <motion.img
+              layoutId={`project-img-${project.id}`}
+              src={getCoverImage()}
+              alt={project.title}
+              onLoad={() => setImageLoaded(true)}
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading="lazy"
+              decoding="async"
+            />
+          </>
+        ) : (
+          <TechStackPlaceholder techStack={project.tech_stack} title={project.title} />
         )}
-        <motion.img
-          layoutId={`project-img-${project.id}`}
-          src={getCoverImage()}
-          alt={project.title}
-          onLoad={() => setImageLoaded(true)}
-          className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
-            imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          loading="lazy"
-          decoding="async"
-        />
         <div className="absolute top-3 right-3 z-10">
           <Badge variant={statusVariant(project.status)}>
             {project.status.replace("_", " ").toUpperCase()}

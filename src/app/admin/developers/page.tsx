@@ -64,10 +64,18 @@ export default function AdminDevelopersPage() {
         if (!usernameMatch) throw new Error("Invalid GitHub URL format.");
         const username = usernameMatch[1];
 
-        if (!token) throw new Error("GitHub PAT is required for auto-fill. Configure it in Admin Settings.");
-
-        const octokit = new Octokit({ auth: token });
-        const user = await octokit.rest.users.getByUsername({ username });
+        let octokit = new Octokit(token ? { auth: token.trim() } : {});
+        let user;
+        try {
+          user = await octokit.rest.users.getByUsername({ username });
+        } catch (err: any) {
+          if (err.status === 401 && token) {
+            octokit = new Octokit({});
+            user = await octokit.rest.users.getByUsername({ username });
+          } else {
+            throw err;
+          }
+        }
         const userData = user.data;
 
         data.avatar = userData.avatar_url || "";

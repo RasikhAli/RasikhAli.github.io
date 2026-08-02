@@ -15,6 +15,7 @@ import projectsData from "@data/projects.json";
 import developersData from "@data/developers.json";
 import { Project } from "@/lib/schemas";
 import siteConfig from "@data/site-config.json";
+import { TechStackPlaceholder } from "@/components/tech-stack-placeholder";
 
 const typedProjects = projectsData as Project[];
 
@@ -26,6 +27,8 @@ export function ProjectDetailsClient({ id }: { id: string }) {
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const project = useMemo(() => typedProjects.find((p) => p.id === id), [id]);
+
+  const hasScreenshots = Boolean(project?.screenshots && project.screenshots.length > 0 && project.screenshots[0]);
 
   const developers = useMemo(() => {
     if (!project) return [];
@@ -61,13 +64,12 @@ export function ProjectDetailsClient({ id }: { id: string }) {
   };
 
   const getCoverImage = () => {
-    if (project.screenshots && project.screenshots.length > 0) {
+    if (hasScreenshots && project.screenshots) {
       const cover = project.screenshots[0];
-      if (!cover) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
       if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
       return `/${cover}`;
     }
-    return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800";
+    return "";
   };
 
   const getFullImageUrl = (path: string) => {
@@ -97,14 +99,18 @@ export function ProjectDetailsClient({ id }: { id: string }) {
           </button>
         </div>
 
-        {/* Hero Cover Image morph */}
+        {/* Hero Cover Image / Tech Stack Placeholder */}
         <div className="relative aspect-video max-h-[450px] w-full rounded-3xl overflow-hidden border border-neutral-200 dark:border-neutral-800 shadow-2xl bg-neutral-950">
-          <motion.img
-            layoutId={`project-img-${project.id}`}
-            src={getCoverImage()}
-            alt={project.title}
-            className="w-full h-full object-cover"
-          />
+          {hasScreenshots ? (
+            <motion.img
+              layoutId={`project-img-${project.id}`}
+              src={getCoverImage()}
+              alt={project.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <TechStackPlaceholder techStack={project.tech_stack} title={project.title} className="h-full" />
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">

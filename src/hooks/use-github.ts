@@ -168,6 +168,24 @@ export function useGitHub() {
   };
 
   const updateProjectsList = async (projects: Project[], action: string, title: string) => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("cms_projects", JSON.stringify(projects));
+      } catch (e) {
+        console.warn("localStorage quota exceeded, skipping browser cache:", e);
+      }
+    }
+
+    try {
+      await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(projects),
+      });
+    } catch (e) {
+      console.warn("Local disk projects sync skipped/failed:", e);
+    }
+
     const content = JSON.stringify(projects, null, 2);
     return await executeCommit("data/projects.json", content, `CMS: ${action} Project ${title}`);
   };

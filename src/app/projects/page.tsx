@@ -11,6 +11,7 @@ import { Project } from "@/lib/schemas";
 const typedProjects = projectsData as Project[];
 
 export default function ProjectsGridPage() {
+  const [projectsList, setProjectsList] = useState<Project[]>(typedProjects);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDeveloper, setSelectedDeveloper] = useState("");
   const [selectedTech, setSelectedTech] = useState("");
@@ -19,19 +20,47 @@ export default function ProjectsGridPage() {
   const [sortBy, setSortBy] = useState("start_date_desc");
   const [showFilters, setShowFilters] = useState(false);
 
-  const allTechStack = useMemo(() => {
-    return Array.from(new Set(typedProjects.flatMap((p) => p.tech_stack))).sort();
+  React.useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("cms_projects") : null;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProjectsList(parsed);
+        }
+      } catch {}
+    }
+
+    fetch("/api/projects")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setProjectsList(data);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("cms_projects", JSON.stringify(data));
+            } catch (e) {
+              console.warn("localStorage quota exceeded:", e);
+            }
+          }
+        }
+      })
+      .catch((err) => console.warn("Failed to fetch /api/projects:", err));
   }, []);
 
+  const allTechStack = useMemo(() => {
+    return Array.from(new Set(projectsList.flatMap((p) => p.tech_stack))).sort();
+  }, [projectsList]);
+
   const allYears = useMemo(() => {
-    const years = typedProjects
+    const years = projectsList
       .map((p) => (p.start_date ? new Date(p.start_date).getFullYear().toString() : ""))
       .filter((y) => y !== "");
     return Array.from(new Set(years)).sort((a, b) => b.localeCompare(a));
-  }, []);
+  }, [projectsList]);
 
   const filteredProjects = useMemo(() => {
-    return typedProjects
+    return projectsList
       .filter((project) => {
         const q = searchQuery.toLowerCase();
         const matchesQuery =
@@ -61,7 +90,7 @@ export default function ProjectsGridPage() {
         if (sortBy === "alpha") return a.title.localeCompare(b.title);
         return 0;
       });
-  }, [searchQuery, selectedDeveloper, selectedTech, selectedStatus, selectedYear, sortBy]);
+  }, [projectsList, searchQuery, selectedDeveloper, selectedTech, selectedStatus, selectedYear, sortBy]);
 
   const resetFilters = () => {
     setSearchQuery("");
