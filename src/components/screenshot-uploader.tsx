@@ -98,8 +98,8 @@ export function ScreenshotUploader({
 
   const getImageUrl = (src: string, pendingUrl?: string) => {
     if (pendingUrl) return pendingUrl; // Local preview for pending files
-    if (src.startsWith("http")) return src;
-    return `/${src}`;
+    if (src.startsWith("http") || src.startsWith("data:")) return src;
+    return src.startsWith("/") ? src : `/${src}`;
   };
 
   return (

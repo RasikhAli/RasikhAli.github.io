@@ -25,7 +25,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     if (hasScreenshots) {
       const cover = project.screenshots[0];
       if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
-      return `/${cover}`;
+      return cover.startsWith("/") ? cover : `/${cover}`;
     }
     return "";
   };

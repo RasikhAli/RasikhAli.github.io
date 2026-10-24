@@ -46,8 +46,13 @@ export function Navbar() {
         
         {/* Brand/Owner */}
         <div className="flex items-center gap-3">
-          <Link href="/" className="font-semibold text-lg tracking-tight bg-gradient-to-r from-neutral-900 to-neutral-600 dark:from-white dark:to-neutral-400 bg-clip-text text-transparent">
-            {siteConfig.portfolio_owner_name}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center text-xs font-black text-white shadow-md shadow-indigo-500/25 ring-1 ring-white/20 group-hover:scale-105 transition-transform">
+              RA
+            </div>
+            <span className="font-bold text-base sm:text-lg tracking-tight bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-600 dark:from-white dark:via-neutral-200 dark:to-neutral-400 bg-clip-text text-transparent group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              {siteConfig.portfolio_owner_name}
+            </span>
           </Link>
           {syncStatus !== "synced" && (
             <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full">
@@ -57,15 +62,15 @@ export function Navbar() {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden md:flex items-center gap-1.5 p-1 bg-neutral-100/80 dark:bg-neutral-900/80 rounded-2xl border border-neutral-200/60 dark:border-neutral-800/60 backdrop-blur-md">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.path}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-all ${
                 isActive(link.path)
-                  ? "text-black dark:text-white"
-                  : "text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white"
+                  ? "bg-white text-neutral-900 dark:bg-neutral-800 dark:text-white shadow-sm font-bold"
+                  : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50"
               }`}
             >
               {link.name}

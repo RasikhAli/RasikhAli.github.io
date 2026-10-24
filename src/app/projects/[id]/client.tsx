@@ -67,7 +67,7 @@ export function ProjectDetailsClient({ id }: { id: string }) {
     if (hasScreenshots && project.screenshots) {
       const cover = project.screenshots[0];
       if (cover.startsWith("http://") || cover.startsWith("https://") || cover.startsWith("data:")) return cover;
-      return `/${cover}`;
+      return cover.startsWith("/") ? cover : `/${cover}`;
     }
     return "";
   };
@@ -75,7 +75,7 @@ export function ProjectDetailsClient({ id }: { id: string }) {
   const getFullImageUrl = (path: string) => {
     if (!path) return "";
     if (path.startsWith("http://") || path.startsWith("https://") || path.startsWith("data:")) return path;
-    return `/${path}`;
+    return path.startsWith("/") ? path : `/${path}`;
   };
 
   const formatDate = (dateStr?: string | null) => {

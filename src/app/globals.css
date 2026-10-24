@@ -67,6 +67,26 @@ nextjs-portal,
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(99, 102, 241, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .bg-grid-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.5s infinite;
+}
+
 /* Layout Animation Transitions */
 .page-transition-enter {
   opacity: 0;
@@ -88,8 +108,13 @@ nextjs-portal,
   animation: marquee 25s linear infinite;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-marquee {
+  .animate-marquee,
+  .animate-shimmer {
     animation: none !important;
   }
 }

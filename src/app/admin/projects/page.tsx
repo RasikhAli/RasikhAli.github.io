@@ -774,7 +774,7 @@ export default function AdminProjectsPage() {
   const getScreenshotSrc = (src: string): string => {
     if (!src) return "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120";
     if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("data:")) return src;
-    return `/${src}`;
+    return src.startsWith("/") ? src : `/${src}`;
   };
 
   if (!isClient) return null;

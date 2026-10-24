@@ -124,6 +124,34 @@ export default function ProjectsGridPage() {
           </p>
         </div>
 
+        {/* Quick Category Tag Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider mr-1">Quick Filters:</span>
+          {[
+            { label: "All Projects", val: "" },
+            { label: "AI & Agents", val: "ai" },
+            { label: "Python", val: "python" },
+            { label: "Next.js / React", val: "next" },
+            { label: "Automation", val: "automation" },
+            { label: "Scraping", val: "scrap" },
+          ].map((pill) => (
+            <button
+              key={pill.label}
+              onClick={() => {
+                setSearchQuery(pill.val);
+                setSelectedTech("");
+              }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                searchQuery === pill.val
+                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                  : "bg-white/80 dark:bg-neutral-900/80 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:border-indigo-500/40"
+              }`}
+            >
+              {pill.label}
+            </button>
+          ))}
+        </div>
+
         {/* Controls */}
         <div className="mb-10 space-y-4">
           {/* Search row */}
