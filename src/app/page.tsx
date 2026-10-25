@@ -20,7 +20,10 @@ import {
   X,
   Award,
   Flame,
-  ArrowDown
+  ArrowDown,
+  GitBranch,
+  Terminal,
+  Calendar
 } from "lucide-react";
 import { Github as GithubBrand, Linkedin, Twitter } from "@/components/brand-icons";
 import { ProjectCard } from "@/components/project-card";
@@ -31,6 +34,7 @@ import { MagneticButton } from "@/components/ui/magnetic-button";
 import { GithubAnalytics } from "@/components/github-analytics";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { TypingBadge } from "@/components/ui/typing-badge";
+import { InteractiveTerminal } from "@/components/interactive-terminal";
 import siteConfig from "../../data/site-config.json";
 import developersData from "../../data/developers.json";
 import rawProjects from "../../data/projects.json";
@@ -154,6 +158,13 @@ export default function HomePage() {
     return list;
   }, [activeCategory]);
 
+  const timelineTeaser = useMemo(() => {
+    return [...projectsData]
+      .filter((p) => p.start_date)
+      .sort((a, b) => new Date(b.start_date!).getTime() - new Date(a.start_date!).getTime())
+      .slice(0, 3);
+  }, []);
+
   const featuredDevelopers = developersData.filter((d) => d.featured);
   const uniqueTechs = Array.from(new Set(typedProjects.flatMap((p) => p.tech_stack)));
   const owner = developersData.find((d) => d.name === siteConfig.portfolio_owner_name) || developersData[0];
@@ -176,181 +187,171 @@ export default function HomePage() {
   const typingLines = siteConfig.profile_typing_lines || [];
   const displayName = owner?.name || siteConfig.portfolio_owner_name;
 
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "Present";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-white selection:bg-indigo-500/30 relative">
       {/* Background Mesh Gradient & Grid Pattern */}
       <div className="fixed inset-0 bg-grid-pattern opacity-40 pointer-events-none -z-10" />
-      <div className="fixed top-0 left-0 w-full h-[900px] -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(99,102,241,0.15),transparent_70%)] pointer-events-none" />
-      <div className="fixed bottom-0 right-0 w-[700px] h-[700px] -z-10 bg-[radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.1),transparent_65%)] pointer-events-none" />
+      <div className="fixed top-0 left-0 w-full h-[900px] -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(99,102,241,0.18),transparent_70%)] pointer-events-none" />
+      <div className="fixed bottom-0 right-0 w-[800px] h-[800px] -z-10 bg-[radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.12),transparent_65%)] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-24 space-y-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-20 pb-24 space-y-24 sm:space-y-32">
         
-        {/* Profile / Hero Section */}
-        <header className="max-w-4xl mx-auto text-center">
+        {/* HERO SECTION: Split Layout with Interactive Terminal */}
+        <header className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Status availability badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-8 shadow-sm backdrop-blur-md"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span>Available for High-Impact Roles & Collaborations</span>
-          </motion.div>
-
-          {/* Avatar with smooth pulsing glow */}
-          {owner?.avatar && (
+          {/* Left Column: Profile, Credentials & Call to Action */}
+          <div className="lg:col-span-7 text-center lg:text-left space-y-6">
+            
+            {/* Status availability badge */}
             <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="relative inline-block mb-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-semibold shadow-sm backdrop-blur-md"
             >
-              <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur-2xl opacity-40 animate-pulse-slow" />
-              <img
-                src={owner.avatar}
-                alt={displayName}
-                className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full object-cover ring-4 ring-white/90 dark:ring-neutral-900 shadow-2xl mx-auto"
-                loading="eager"
-                decoding="async"
-              />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span>Available for High-Impact Roles & Collaborations</span>
             </motion.div>
-          )}
 
-          {/* Animated Name Reveal */}
-          <div className="mb-4">
-            <TextReveal
-              text={displayName}
-              as="h1"
-              className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-tight bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500 dark:from-white dark:via-neutral-200 dark:to-neutral-500 bg-clip-text text-transparent justify-center"
-            />
+            {/* Avatar & Honors Row */}
+            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-5 pt-2">
+              {owner?.avatar && (
+                <div className="relative shrink-0">
+                  <div className="absolute -inset-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full blur-xl opacity-40 animate-pulse-slow" />
+                  <img
+                    src={owner.avatar}
+                    alt={displayName}
+                    className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover ring-4 ring-white/90 dark:ring-neutral-900 shadow-2xl"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2 text-center sm:text-left">
+                <TextReveal
+                  text={displayName}
+                  as="h1"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight bg-gradient-to-br from-neutral-900 via-neutral-700 to-neutral-500 dark:from-white dark:via-neutral-200 dark:to-neutral-500 bg-clip-text text-transparent justify-center sm:justify-start"
+                />
+
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/25 rounded-full text-xs font-extrabold text-amber-600 dark:text-amber-400">
+                    <Award className="w-3.5 h-3.5 text-amber-500" />
+                    Gold Medalist
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-500/10 border border-indigo-500/25 rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                    <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
+                    Junior Lecturer @ Superior Univ
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Typewriter Badge */}
+            {typingLines.length > 0 && (
+              <div className="pt-1 flex justify-center sm:justify-start">
+                <TypingBadge lines={typingLines} />
+              </div>
+            )}
+
+            {/* Profile Bio */}
+            {siteConfig.profile_bio && (
+              <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-300 leading-relaxed max-w-xl">
+                {siteConfig.profile_bio}
+              </p>
+            )}
+
+            {/* Action Buttons Row */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 pt-2">
+              <a href="#featured-projects">
+                <MagneticButton className="px-6 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-2xl text-xs font-extrabold shadow-xl shadow-indigo-500/25 transition-all flex items-center gap-2 group">
+                  <span>Explore Featured Work</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </MagneticButton>
+              </a>
+
+              <Link
+                href="/timeline"
+                className="inline-flex items-center gap-2 px-5 py-3.5 bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border border-neutral-800 dark:border-white/20 rounded-2xl text-xs font-bold hover:shadow-lg transition-all"
+              >
+                <GitBranch className="w-4 h-4 text-indigo-400 dark:text-indigo-600" />
+                <span>S-Curve Timeline</span>
+              </Link>
+
+              {siteConfig.resume_url && (
+                <a
+                  href={siteConfig.resume_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-3.5 bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all backdrop-blur-sm"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Resume</span>
+                </a>
+              )}
+
+              {siteConfig.contact_email && (
+                <button
+                  onClick={handleCopyEmail}
+                  className="inline-flex items-center gap-1.5 px-4 py-3.5 bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800/80 rounded-2xl text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all backdrop-blur-sm"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Mail className="w-3.5 h-3.5" />}
+                  <span>{copied ? "Copied" : "Email"}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Social Icons row */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900/80 transition-colors"
+                >
+                  <link.icon className="w-3.5 h-3.5" />
+                  <span>{link.label}</span>
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* Gold Medalist / Academic Distinction Pill */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap items-center justify-center gap-2.5 mb-5"
-          >
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-amber-500/10 border border-amber-500/25 rounded-full text-xs font-bold text-amber-600 dark:text-amber-400">
-              <Award className="w-3.5 h-3.5 text-amber-500" />
-              Gold Medalist
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-indigo-500/10 border border-indigo-500/25 rounded-full text-xs font-bold text-indigo-600 dark:text-indigo-400">
-              <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
-              Junior Lecturer @ Superior University
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 bg-purple-500/10 border border-purple-500/25 rounded-full text-xs font-bold text-purple-600 dark:text-purple-400">
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-              AI & Software Engineer
-            </span>
-          </motion.div>
-
-          {/* Bio text */}
-          {siteConfig.profile_bio && (
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-base sm:text-lg text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto leading-relaxed"
-            >
-              {siteConfig.profile_bio}
-            </motion.p>
-          )}
-
-          {/* Dynamic Rotating Titles / Typewriter Badge */}
-          {typingLines.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 }}
-              className="mt-6"
-            >
-              <TypingBadge lines={typingLines} />
-            </motion.div>
-          )}
-
-          {/* Primary Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-wrap items-center justify-center gap-3.5 mt-8"
-          >
-            <a href="#featured-projects">
-              <MagneticButton className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white rounded-xl text-xs font-extrabold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2">
-                <span>Explore Featured Work</span>
-                <ArrowDown className="w-4 h-4 animate-bounce" />
-              </MagneticButton>
-            </a>
-
-            {siteConfig.resume_url && (
-              <a
-                href={siteConfig.resume_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-3 bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-lg transition-all backdrop-blur-sm"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Resume / CV</span>
-              </a>
-            )}
-
-            {siteConfig.contact_email && (
-              <button
-                onClick={handleCopyEmail}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-white/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800/80 rounded-xl text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:border-indigo-500/50 hover:text-indigo-600 dark:hover:text-indigo-400 hover:shadow-lg transition-all backdrop-blur-sm"
-              >
-                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Mail className="w-4 h-4" />}
-                <span>{copied ? "Email Copied!" : "Copy Email"}</span>
-              </button>
-            )}
-          </motion.div>
-
-          {/* Social Icons row */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-wrap items-center justify-center gap-2.5 mt-5"
-          >
-            {socialLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900/80 transition-colors"
-                title={link.label}
-              >
-                <link.icon className="w-3.5 h-3.5" />
-                <span>{link.label}</span>
-              </a>
-            ))}
-          </motion.div>
+          {/* Right Column: Live Interactive Developer HUD & Terminal */}
+          <div className="lg:col-span-5">
+            <InteractiveTerminal />
+          </div>
         </header>
 
         {/* Animated Key Metrics Tiles */}
-        <section className="max-w-5xl mx-auto">
+        <section className="max-w-6xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-2xl backdrop-blur-md shadow-sm hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-3xl backdrop-blur-md shadow-sm hover:border-indigo-500/40 hover:-translate-y-1 transition-all duration-300 group">
               <FolderKanban className="w-6 h-6 text-indigo-500 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <StatCounter value={projectsData.length} label="Projects Shipped" className="text-indigo-600 dark:text-indigo-400" />
             </div>
-            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-2xl backdrop-blur-md shadow-sm hover:border-purple-500/40 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-3xl backdrop-blur-md shadow-sm hover:border-purple-500/40 hover:-translate-y-1 transition-all duration-300 group">
               <Code2 className="w-6 h-6 text-purple-500 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <StatCounter value={uniqueTechs.length} label="Technologies Mastered" className="text-purple-600 dark:text-purple-400" />
             </div>
-            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-2xl backdrop-blur-md shadow-sm hover:border-blue-500/40 hover:-translate-y-1 transition-all duration-300 group">
+            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-3xl backdrop-blur-md shadow-sm hover:border-blue-500/40 hover:-translate-y-1 transition-all duration-300 group">
               <Users2 className="w-6 h-6 text-blue-500 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <StatCounter value={developersData.length} label="Engineering Team" className="text-blue-600 dark:text-blue-400" />
             </div>
-            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-2xl backdrop-blur-md shadow-sm hover:border-amber-500/40 hover:-translate-y-1 transition-all duration-300 group flex flex-col items-center justify-center">
+            <div className="bg-white/80 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800/80 p-6 rounded-3xl backdrop-blur-md shadow-sm hover:border-amber-500/40 hover:-translate-y-1 transition-all duration-300 group flex flex-col items-center justify-center">
               <GithubBrand className="w-6 h-6 text-amber-500 mx-auto mb-3 group-hover:scale-110 transition-transform" />
               <p className="text-xl sm:text-2xl font-black text-neutral-900 dark:text-white font-mono truncate max-w-full">
                 @{siteConfig.github_username || "RasikhAli"}
@@ -362,8 +363,90 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* S-CURVE SERPENTINE TIMELINE TEASER SECTION */}
+        <section className="max-w-7xl mx-auto">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 pb-5 border-b border-neutral-200 dark:border-neutral-800">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold uppercase tracking-wider mb-2">
+                <GitBranch className="w-3.5 h-3.5 text-indigo-500" />
+                S-Curve Pipeline Concept
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-neutral-900 dark:text-white tracking-tight">
+                Chronological S-Curve Pipeline
+              </h2>
+              <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1.5">
+                Connected in continuous serpentine flow with curved pipeline traces.
+              </p>
+            </div>
+
+            <Link
+              href="/timeline"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-bold shadow-lg shadow-indigo-500/25 transition-all group shrink-0"
+            >
+              <span>Explore Full S-Curve ({projectsData.length} Milestones)</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          {/* 3 Teaser Cards Connected Horizontally with Right-Side Curved Drop */}
+          <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {timelineTeaser.map((p, idx) => (
+                <div key={p.id} className="relative">
+                  {/* Connector line between card 0-1 and 1-2 on desktop */}
+                  {idx < 2 && (
+                    <div className="hidden md:flex absolute top-1/2 -right-6 -translate-y-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 z-10 items-center justify-end">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                    </div>
+                  )}
+
+                  <SpotlightCard className="p-6 bg-white/90 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl hover:border-indigo-500/50 hover:shadow-xl transition-all">
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-[10px] font-black text-indigo-600 dark:text-indigo-400 font-mono">
+                        #{String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-indigo-500" />
+                        {formatDate(p.start_date)}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-extrabold text-neutral-900 dark:text-white line-clamp-1 mb-1">
+                      <Link href={`/projects/${p.id}`} className="hover:text-indigo-500 transition-colors">
+                        {p.title}
+                      </Link>
+                    </h3>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-relaxed mb-3">
+                      {p.short_description}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1">
+                      {p.tech_stack.slice(0, 3).map((t) => (
+                        <span
+                          key={t}
+                          className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300 rounded-md text-[10px] font-semibold"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  </SpotlightCard>
+                </div>
+              ))}
+            </div>
+
+            {/* Serpentine Curve indicator at the bottom right */}
+            <div className="hidden md:flex items-center justify-end mt-4 pr-12 gap-2 text-xs font-mono text-indigo-500">
+              <span>S-Curve wraps to next row</span>
+              <svg className="w-8 h-8" viewBox="0 0 32 32" fill="none">
+                <path d="M 0,8 C 24,8 24,28 0,28" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+        </section>
+
         {/* GitHub Analytics Interactive Panel */}
-        <section className="max-w-5xl mx-auto">
+        <section className="max-w-6xl mx-auto">
           <GithubAnalytics githubUrl={siteConfig.github_url} />
         </section>
 
@@ -442,7 +525,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Education & Academic Distinction Section */}
+        {/* Education, Teaching & Academic Distinction Section */}
         <section className="max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10 pb-5 border-b border-neutral-200 dark:border-neutral-800">
             <div>
@@ -464,9 +547,9 @@ export default function HomePage() {
             {/* University & Academic Highlights */}
             <div className="lg:col-span-1 space-y-6">
               {/* Gold Medal Card */}
-              <SpotlightCard className="p-7 space-y-4 hover:-translate-y-1 transition-all duration-300 border-amber-500/30 bg-gradient-to-br from-amber-500/10 via-transparent to-transparent">
+              <SpotlightCard className="p-7 space-y-4 hover:-translate-y-1 transition-all duration-300 border-amber-500/30 bg-gradient-to-br from-amber-500/15 via-transparent to-transparent shadow-xl shadow-amber-500/5">
                 <div className="flex items-center gap-3.5">
-                  <div className="p-3 bg-amber-500/20 text-amber-500 rounded-2xl border border-amber-500/30">
+                  <div className="p-3 bg-amber-500/20 text-amber-500 rounded-2xl border border-amber-500/30 shadow-md">
                     <Award className="w-6 h-6" />
                   </div>
                   <div>
@@ -812,7 +895,7 @@ export default function HomePage() {
               Want to collaborate or discuss a project?
             </h3>
             <p className="text-neutral-600 dark:text-neutral-300 max-w-md mx-auto text-sm sm:text-base mb-8 leading-relaxed">
-              Whether you have an interesting problem to solve, want to consult on AI solutions, or explore joint ventures, my inbox is open.
+              Whether you have an interesting engineering challenge, want to consult on AI solutions, or explore joint ventures, my inbox is open.
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-4">
