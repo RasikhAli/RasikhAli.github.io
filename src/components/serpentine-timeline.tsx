@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   ArrowUpRight,
@@ -10,9 +9,7 @@ import {
   PlayCircle,
   CalendarClock,
   Search,
-  Sparkles,
   ExternalLink,
-  Layers,
   ChevronRight,
   RotateCcw,
   Zap,
@@ -30,6 +27,12 @@ import { TechStackPlaceholder } from "@/components/tech-stack-placeholder";
 interface SerpentineTimelineProps {
   projects: Project[];
 }
+
+// Fixed geometry constants for mathematical alignment
+const CARD_HEIGHT = 460; // Exact height of every card
+const ROW_GAP = 64; // gap-y-16 = 64px
+const DELTA_Y = CARD_HEIGHT + ROW_GAP; // Exactly 524px from center of row N to center of row N+1
+const HORIZONTAL_GAP = 48; // gap-x-12 = 48px
 
 export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,17 +118,16 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
   };
 
   return (
-    <div className="space-y-10">
-      {/* Control, Search & View Switcher Bar */}
+    <div className="space-y-12">
+      {/* Control & View Mode Switcher */}
       <div className="p-5 sm:p-6 bg-neutral-900/90 border border-neutral-800 rounded-3xl backdrop-blur-2xl shadow-2xl space-y-4 text-left">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-          
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search projects, domains, or tech stack (e.g. Python, AI, Next.js)..."
+              placeholder="Search projects, domains, or tech stack..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-neutral-950/80 border border-neutral-800 rounded-2xl text-xs sm:text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-indigo-500 transition-all"
@@ -141,7 +143,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
                   : "text-neutral-400 hover:text-white"
               }`}
-              title="Serpentine S-Curve Pipeline View"
             >
               <GitBranch className="w-3.5 h-3.5" />
               <span>S-Curve Flow</span>
@@ -153,7 +154,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
                   : "text-neutral-400 hover:text-white"
               }`}
-              title="Milestone Grid View"
             >
               <Grid3X3 className="w-3.5 h-3.5" />
               <span>Grid View</span>
@@ -165,7 +165,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
                   : "text-neutral-400 hover:text-white"
               }`}
-              title="Linear Milestone Tree View"
             >
               <GitCommit className="w-3.5 h-3.5" />
               <span>Linear Tree</span>
@@ -173,10 +172,10 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
           </div>
         </div>
 
-        {/* Filter Pills row */}
+        {/* Filters */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-neutral-800/80">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mr-1">Era:</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 mr-1">Year:</span>
             {availableYears.map((yr) => (
               <button
                 key={yr}
@@ -187,7 +186,7 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                     : "bg-neutral-950 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800/60"
                 }`}
               >
-                {yr === "all" ? "All Eras" : yr}
+                {yr === "all" ? "All Years" : yr}
               </button>
             ))}
           </div>
@@ -219,78 +218,85 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
             )}
           </div>
         </div>
-
-        <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
-          <span className="flex items-center gap-1.5 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Displaying <strong className="text-white">{displayedProjects.length}</strong> of {filteredProjects.length} engineering milestones
-          </span>
-          <span className="font-mono text-[11px] text-indigo-400">
-            {viewMode === "serpentine" ? "S-Curve Serpentine Circuit" : viewMode === "grid" ? "Uniform Milestone Matrix" : "Linear Sequential Tree"}
-          </span>
-        </div>
       </div>
 
-      {/* VIEW 1: SERPENTINE S-CURVE CIRCUIT PIPELINE (Desktop: 3 per row, Tablet/Mobile: Adaptive) */}
+      {/* VIEW 1: SERPENTINE S-CURVE CIRCUIT PIPELINE */}
       {viewMode === "serpentine" && (
         <div className="space-y-16 relative">
           
-          {/* Desktop Serpentine Grid */}
-          <div className="hidden lg:block space-y-20">
+          {/* Desktop Serpentine Grid (3 cards per row) */}
+          <div className="hidden lg:block space-y-16">
             {rows.map((rowProjects, rowIndex) => {
               const isEvenRow = rowIndex % 2 === 0;
               const isLastRow = rowIndex === rows.length - 1;
+              // On even rows: left to right. On odd rows: right to left.
               const displayOrder = isEvenRow ? rowProjects : [...rowProjects].reverse();
 
               return (
-                <div key={rowIndex} className="relative">
-                  
-                  {/* Era Badge if first row of a year */}
-                  {rowIndex === 0 && (
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold">
-                        <Zap className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>Active Production Pipeline</span>
-                      </div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/30 to-transparent" />
-                    </div>
-                  )}
-
-                  {/* 3 Cards Container with horizontal continuous pipeline rail */}
-                  <div className="grid grid-cols-3 gap-10 items-stretch relative">
+                <div
+                  key={rowIndex}
+                  className="relative"
+                  style={{ height: `${CARD_HEIGHT}px` }}
+                >
+                  {/* Grid of 3 Cards */}
+                  <div className="grid grid-cols-3 gap-12 h-full relative">
                     {displayOrder.map((project, colIndex) => {
                       const globalIndex = rowIndex * 3 + (isEvenRow ? colIndex : (rowProjects.length - 1 - colIndex));
                       const isLastInRow = colIndex === displayOrder.length - 1;
                       const coverImage = getCoverImage(project);
 
                       return (
-                        <div key={project.id} className="relative flex flex-col h-full">
+                        <div key={project.id} className="relative h-full flex flex-col">
                           
-                          {/* Inter-Card Pipeline Rail Connector */}
+                          {/* Left Connection Port Socket (at Y = 50%) */}
+                          <div className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-neutral-950 border border-indigo-400 z-30 shadow-[0_0_8px_#6366f1] flex items-center justify-center">
+                            <span className="w-1 h-1 rounded-full bg-indigo-300" />
+                          </div>
+
+                          {/* Right Connection Port Socket (at Y = 50%) */}
+                          <div className="absolute -right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-neutral-950 border border-purple-400 z-30 shadow-[0_0_8px_#a855f7] flex items-center justify-center">
+                            <span className="w-1 h-1 rounded-full bg-purple-300" />
+                          </div>
+
+                          {/* Horizontal Animated Conduit Between Adjacent Cards */}
                           {!isLastInRow && (
                             <div
-                              className={`absolute top-1/2 ${
-                                isEvenRow ? "-right-10" : "-left-10"
-                              } -translate-y-1/2 w-10 h-1 z-30 pointer-events-none flex items-center justify-center`}
+                              className="absolute top-1/2 -translate-y-1/2 w-12 z-20 pointer-events-none"
+                              style={{ right: "-48px", height: "16px", marginTop: "-8px" }}
                             >
-                              <div className="w-full h-1 bg-neutral-800 rounded-full overflow-hidden relative">
-                                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
-                              </div>
-                              {/* Pulse energy particle */}
-                              <span
-                                className={`absolute top-1/2 -translate-y-1/2 ${
-                                  isEvenRow ? "right-1" : "left-1"
-                                } w-2 h-2 rounded-full bg-white shadow-[0_0_10px_#818cf8] animate-pulse`}
-                              />
+                              <svg className="w-12 h-4 overflow-visible" viewBox="0 0 48 16" fill="none">
+                                {/* Base track */}
+                                <line x1="0" y1="8" x2="48" y2="8" stroke="#1e1b4b" strokeWidth="3" strokeLinecap="round" />
+                                {/* Animated dash beam */}
+                                <line
+                                  x1="0"
+                                  y1="8"
+                                  x2="48"
+                                  y2="8"
+                                  stroke="#818cf8"
+                                  strokeWidth="2.5"
+                                  strokeDasharray="8 8"
+                                  className={isEvenRow ? "animate-flow-forward" : "animate-flow-reverse"}
+                                  strokeLinecap="round"
+                                />
+                                {/* Laser photon traveling horizontally */}
+                                <circle r="3.5" fill="#ffffff" filter="drop-shadow(0 0 6px #818cf8)">
+                                  <animateMotion
+                                    path={isEvenRow ? "M 0,8 L 48,8" : "M 48,8 L 0,8"}
+                                    dur="1.5s"
+                                    repeatCount="indefinite"
+                                  />
+                                </circle>
+                              </svg>
                             </div>
                           )}
 
-                          {/* Full Uniform Milestone Card */}
-                          <SpotlightCard className="flex-1 flex flex-col justify-between bg-neutral-900/90 border border-neutral-800 rounded-3xl hover:border-indigo-500/60 hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden ring-1 ring-white/5">
+                          {/* The Milestone Card */}
+                          <SpotlightCard className="h-full flex flex-col justify-between bg-neutral-900/90 border border-neutral-800 rounded-3xl hover:border-indigo-500/60 hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1.5 transition-all duration-300 relative group overflow-hidden ring-1 ring-white/5">
                             
                             {/* Card Top: Header Bar */}
                             <div className="p-5 pb-3">
-                              <div className="flex items-center justify-between gap-2 mb-3">
+                              <div className="flex items-center justify-between gap-2 mb-2">
                                 <div className="flex items-center gap-2">
                                   <span className="px-2.5 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-[10px] font-black text-white font-mono shadow-sm">
                                     #{String(globalIndex + 1).padStart(2, "0")}
@@ -307,7 +313,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                                 </Badge>
                               </div>
 
-                              {/* Card Title */}
                               <h3 className="text-base font-extrabold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
                                 <Link href={`/projects/${project.id}`} className="inline-flex items-center gap-1">
                                   <span>{project.title}</span>
@@ -316,7 +321,7 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                               </h3>
                             </div>
 
-                            {/* Card Middle: Uniform Aspect-Video Visual Banner (Guarantees Equal Height) */}
+                            {/* Card Middle: Aspect-Video Visual Banner (Guarantees Equal Height) */}
                             <div className="relative aspect-video w-full overflow-hidden bg-neutral-950 border-y border-neutral-800/80">
                               {coverImage ? (
                                 <img
@@ -327,13 +332,8 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                               ) : (
-                                <TechStackPlaceholder
-                                  techStack={project.tech_stack}
-                                  title={project.title}
-                                  className="h-full"
-                                />
+                                <TechStackPlaceholder techStack={project.tech_stack} title={project.title} className="h-full" />
                               )}
-                              {/* Hover quick preview button overlay */}
                               <button
                                 onClick={() => setQuickPreviewProject(project)}
                                 className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-xl bg-black/70 hover:bg-black/90 text-white text-[10px] font-bold backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 border border-white/10"
@@ -344,12 +344,11 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                             </div>
 
                             {/* Card Body & Footer */}
-                            <div className="p-5 pt-3.5 space-y-3 flex-1 flex flex-col justify-between">
+                            <div className="p-5 pt-3 space-y-3 flex-1 flex flex-col justify-between">
                               <p className="text-xs text-neutral-300 line-clamp-2 leading-relaxed">
                                 {project.short_description}
                               </p>
 
-                              {/* Tech Stack Pills */}
                               <div className="space-y-3 pt-2 border-t border-neutral-800/70">
                                 <div className="flex flex-wrap gap-1">
                                   {project.tech_stack.slice(0, 3).map((t) => (
@@ -367,7 +366,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                                   )}
                                 </div>
 
-                                {/* Direct Action Links */}
                                 <div className="flex items-center justify-between text-xs pt-1">
                                   <Link
                                     href={`/projects/${project.id}`}
@@ -410,70 +408,153 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                     })}
                   </div>
 
-                  {/* S-CURVE CURVED HAIRPIN LOOP CONNECTOR BETWEEN ROWS */}
+                  {/* S-CURVE CURVED HAIRPIN LOOP CONNECTOR (Mathematically Aligned at Y = 50%) */}
                   {!isLastRow && (
                     <div
-                      className={`absolute -bottom-20 ${
-                        isEvenRow ? "-right-12" : "-left-12"
-                      } w-24 h-24 z-20 pointer-events-none flex items-center justify-center`}
+                      className={`absolute pointer-events-none z-30 ${
+                        isEvenRow ? "right-0 translate-x-full" : "left-0 -translate-x-full"
+                      }`}
+                      style={{
+                        top: "50%",
+                        width: "96px",
+                        height: `${DELTA_Y}px`,
+                      }}
                     >
                       {isEvenRow ? (
-                        /* Right side S-turn loop */
-                        <svg className="w-24 h-24 overflow-visible" viewBox="0 0 96 96" fill="none">
+                        /* Right side loop from Row N center down to Row N+1 center */
+                        <svg
+                          className="w-full h-full overflow-visible"
+                          viewBox={`0 0 96 ${DELTA_Y}`}
+                          fill="none"
+                        >
                           <defs>
-                            <linearGradient id={`sg-r-${rowIndex}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <linearGradient id={`grad-r-${rowIndex}`} x1="0%" y1="0%" x2="0%" y2="100%">
                               <stop offset="0%" stopColor="#6366f1" />
                               <stop offset="50%" stopColor="#a855f7" />
                               <stop offset="100%" stopColor="#ec4899" />
                             </linearGradient>
+                            <filter id={`glow-r-${rowIndex}`} x="-30%" y="-30%" width="160%" height="160%">
+                              <feGaussianBlur stdDeviation="3.5" result="blur" />
+                              <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                              </feMerge>
+                            </filter>
                           </defs>
-                          {/* Ambient glow tube */}
+
+                          {/* Outer ambient glow path */}
                           <path
-                            d="M 0,0 C 70,0 70,96 0,96"
-                            stroke={`url(#sg-r-${rowIndex})`}
+                            d={`M 0,0 C 64,0 96,64 96,160 L 96,${DELTA_Y - 160} C 96,${DELTA_Y - 64} 64,${DELTA_Y} 0,${DELTA_Y}`}
+                            stroke={`url(#grad-r-${rowIndex})`}
                             strokeWidth="8"
                             strokeLinecap="round"
-                            className="opacity-20 blur-sm"
+                            className="opacity-25 blur-sm"
                           />
-                          {/* Core high-def energy cable */}
+
+                          {/* Base conduit pipe */}
                           <path
-                            d="M 0,0 C 70,0 70,96 0,96"
-                            stroke={`url(#sg-r-${rowIndex})`}
+                            d={`M 0,0 C 64,0 96,64 96,160 L 96,${DELTA_Y - 160} C 96,${DELTA_Y - 64} 64,${DELTA_Y} 0,${DELTA_Y}`}
+                            stroke="#1e1b4b"
                             strokeWidth="3.5"
                             strokeLinecap="round"
                           />
-                          {/* Animated traveling photon */}
-                          <circle cx="48" cy="48" r="4" fill="#ffffff" className="animate-ping" />
-                          <circle cx="48" cy="48" r="3" fill="#a855f7" />
+
+                          {/* Flowing animated dash track */}
+                          <path
+                            d={`M 0,0 C 64,0 96,64 96,160 L 96,${DELTA_Y - 160} C 96,${DELTA_Y - 64} 64,${DELTA_Y} 0,${DELTA_Y}`}
+                            stroke={`url(#grad-r-${rowIndex})`}
+                            strokeWidth="3"
+                            strokeDasharray="14 14"
+                            className="animate-flow-forward"
+                            strokeLinecap="round"
+                          />
+
+                          {/* Lead Laser Photon */}
+                          <circle r="4.5" fill="#ffffff" filter={`url(#glow-r-${rowIndex})`}>
+                            <animateMotion
+                              path={`M 0,0 C 64,0 96,64 96,160 L 96,${DELTA_Y - 160} C 96,${DELTA_Y - 64} 64,${DELTA_Y} 0,${DELTA_Y}`}
+                              dur="2.4s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
+
+                          {/* Trailing Energy Pulse */}
+                          <circle r="2.5" fill="#a855f7" opacity="0.8">
+                            <animateMotion
+                              path={`M 0,0 C 64,0 96,64 96,160 L 96,${DELTA_Y - 160} C 96,${DELTA_Y - 64} 64,${DELTA_Y} 0,${DELTA_Y}`}
+                              dur="2.4s"
+                              begin="1.2s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
                         </svg>
                       ) : (
-                        /* Left side S-turn loop */
-                        <svg className="w-24 h-24 overflow-visible" viewBox="0 0 96 96" fill="none">
+                        /* Left side loop from Row N center down to Row N+1 center */
+                        <svg
+                          className="w-full h-full overflow-visible"
+                          viewBox={`0 0 96 ${DELTA_Y}`}
+                          fill="none"
+                        >
                           <defs>
-                            <linearGradient id={`sg-l-${rowIndex}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <linearGradient id={`grad-l-${rowIndex}`} x1="0%" y1="0%" x2="0%" y2="100%">
                               <stop offset="0%" stopColor="#ec4899" />
                               <stop offset="50%" stopColor="#a855f7" />
                               <stop offset="100%" stopColor="#6366f1" />
                             </linearGradient>
+                            <filter id={`glow-l-${rowIndex}`} x="-30%" y="-30%" width="160%" height="160%">
+                              <feGaussianBlur stdDeviation="3.5" result="blur" />
+                              <feMerge>
+                                <feMergeNode in="blur" />
+                                <feMergeNode in="SourceGraphic" />
+                              </feMerge>
+                            </filter>
                           </defs>
-                          {/* Ambient glow tube */}
+
+                          {/* Outer ambient glow path */}
                           <path
-                            d="M 96,0 C 26,0 26,96 96,96"
-                            stroke={`url(#sg-l-${rowIndex})`}
+                            d={`M 96,0 C 32,0 0,64 0,160 L 0,${DELTA_Y - 160} C 0,${DELTA_Y - 64} 32,${DELTA_Y} 96,${DELTA_Y}`}
+                            stroke={`url(#grad-l-${rowIndex})`}
                             strokeWidth="8"
                             strokeLinecap="round"
-                            className="opacity-20 blur-sm"
+                            className="opacity-25 blur-sm"
                           />
-                          {/* Core high-def energy cable */}
+
+                          {/* Base conduit pipe */}
                           <path
-                            d="M 96,0 C 26,0 26,96 96,96"
-                            stroke={`url(#sg-l-${rowIndex})`}
+                            d={`M 96,0 C 32,0 0,64 0,160 L 0,${DELTA_Y - 160} C 0,${DELTA_Y - 64} 32,${DELTA_Y} 96,${DELTA_Y}`}
+                            stroke="#1e1b4b"
                             strokeWidth="3.5"
                             strokeLinecap="round"
                           />
-                          {/* Animated traveling photon */}
-                          <circle cx="48" cy="48" r="4" fill="#ffffff" className="animate-ping" />
-                          <circle cx="48" cy="48" r="3" fill="#a855f7" />
+
+                          {/* Flowing animated dash track */}
+                          <path
+                            d={`M 96,0 C 32,0 0,64 0,160 L 0,${DELTA_Y - 160} C 0,${DELTA_Y - 64} 32,${DELTA_Y} 96,${DELTA_Y}`}
+                            stroke={`url(#grad-l-${rowIndex})`}
+                            strokeWidth="3"
+                            strokeDasharray="14 14"
+                            className="animate-flow-forward"
+                            strokeLinecap="round"
+                          />
+
+                          {/* Lead Laser Photon */}
+                          <circle r="4.5" fill="#ffffff" filter={`url(#glow-l-${rowIndex})`}>
+                            <animateMotion
+                              path={`M 96,0 C 32,0 0,64 0,160 L 0,${DELTA_Y - 160} C 0,${DELTA_Y - 64} 32,${DELTA_Y} 96,${DELTA_Y}`}
+                              dur="2.4s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
+
+                          {/* Trailing Energy Pulse */}
+                          <circle r="2.5" fill="#6366f1" opacity="0.8">
+                            <animateMotion
+                              path={`M 96,0 C 32,0 0,64 0,160 L 0,${DELTA_Y - 160} C 0,${DELTA_Y - 64} 32,${DELTA_Y} 96,${DELTA_Y}`}
+                              dur="2.4s"
+                              begin="1.2s"
+                              repeatCount="indefinite"
+                            />
+                          </circle>
                         </svg>
                       )}
                     </div>
@@ -498,7 +579,6 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                     <span className="w-2 h-2 rounded-full bg-indigo-400 animate-ping" />
                   </div>
 
-                  {/* Card */}
                   <SpotlightCard className="bg-neutral-900/90 border border-neutral-800 rounded-3xl overflow-hidden hover:border-indigo-500/50 transition-all shadow-xl">
                     <div className="p-5 pb-3 flex items-center justify-between gap-2">
                       <span className="px-2.5 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-[10px] font-black text-white font-mono">
@@ -523,11 +603,7 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <TechStackPlaceholder
-                          techStack={project.tech_stack}
-                          title={project.title}
-                          className="h-full"
-                        />
+                        <TechStackPlaceholder techStack={project.tech_stack} title={project.title} className="h-full" />
                       )}
                     </div>
 
@@ -653,7 +729,7 @@ export function SerpentineTimeline({ projects }: SerpentineTimelineProps) {
         </div>
       )}
 
-      {/* Quick Preview Modal if user clicks 'Preview' */}
+      {/* Quick Preview Modal */}
       {quickPreviewProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative text-left">

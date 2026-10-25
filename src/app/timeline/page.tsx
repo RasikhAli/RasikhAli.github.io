@@ -11,13 +11,13 @@ const typedProjects = projectsData as Project[];
 
 export default function ProjectsTimelinePage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white selection:bg-indigo-500/30 relative">
+    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white selection:bg-indigo-500/30 relative overflow-x-hidden">
       {/* Background Mesh Gradient & Grid */}
       <div className="fixed inset-0 bg-grid-pattern opacity-40 pointer-events-none -z-10" />
       <div className="fixed top-0 left-0 w-full h-[600px] -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)] pointer-events-none" />
       <div className="fixed bottom-0 right-0 w-[500px] h-[500px] -z-10 bg-[radial-gradient(circle_at_100%_100%,rgba(168,85,247,0.1),transparent)] pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-8 lg:px-24 pt-16 sm:pt-20 pb-24">
         {/* Header */}
         <div className="mb-12 text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 rounded-full border border-indigo-500/25 mb-4 shadow-sm">

@@ -112,6 +112,48 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Serpentine Pipeline Animated Laser Beams */
+@keyframes flowDashForward {
+  from {
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes flowDashReverse {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 40;
+  }
+}
+
+@keyframes laserPulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    filter: drop-shadow(0 0 6px rgba(99, 102, 241, 0.6));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.95)) drop-shadow(0 0 24px rgba(236, 72, 153, 0.8));
+  }
+}
+
+.animate-flow-forward {
+  animation: flowDashForward 1.2s linear infinite;
+}
+
+.animate-flow-reverse {
+  animation: flowDashReverse 1.2s linear infinite;
+}
+
+.animate-laser-pulse {
+  animation: laserPulseGlow 2.5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee,
   .animate-shimmer {
