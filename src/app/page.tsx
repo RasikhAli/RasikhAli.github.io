@@ -35,6 +35,7 @@ import { GithubAnalytics } from "@/components/github-analytics";
 import { SpotlightCard } from "@/components/ui/spotlight-card";
 import { TypingBadge } from "@/components/ui/typing-badge";
 import { InteractiveTerminal } from "@/components/interactive-terminal";
+import { TechStackPlaceholder } from "@/components/tech-stack-placeholder";
 import siteConfig from "../../data/site-config.json";
 import developersData from "../../data/developers.json";
 import rawProjects from "../../data/projects.json";
@@ -390,56 +391,90 @@ export default function HomePage() {
 
           {/* 3 Teaser Cards Connected Horizontally with Right-Side Curved Drop */}
           <div className="relative">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
-              {timelineTeaser.map((p, idx) => (
-                <div key={p.id} className="relative">
-                  {/* Connector line between card 0-1 and 1-2 on desktop */}
-                  {idx < 2 && (
-                    <div className="hidden md:flex absolute top-1/2 -right-6 -translate-y-1/2 w-6 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 z-10 items-center justify-end">
-                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                    </div>
-                  )}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative items-stretch">
+              {timelineTeaser.map((p, idx) => {
+                const cover = p.screenshots && p.screenshots[0] ? (p.screenshots[0].startsWith("/") ? p.screenshots[0] : `/${p.screenshots[0]}`) : null;
+                return (
+                  <div key={p.id} className="relative flex flex-col h-full">
+                    {/* Connector line between card 0-1 and 1-2 on desktop */}
+                    {idx < 2 && (
+                      <div className="hidden md:flex absolute top-1/2 -right-8 -translate-y-1/2 w-8 h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 z-20 items-center justify-end rounded-full">
+                        <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_#818cf8] animate-pulse" />
+                      </div>
+                    )}
 
-                  <SpotlightCard className="p-6 bg-white/90 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800/80 rounded-3xl hover:border-indigo-500/50 hover:shadow-xl transition-all">
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="px-2.5 py-0.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg text-[10px] font-black text-indigo-600 dark:text-indigo-400 font-mono">
-                        #{String(idx + 1).padStart(2, "0")}
-                      </span>
-                      <span className="text-xs font-bold text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-indigo-500" />
-                        {formatDate(p.start_date)}
-                      </span>
-                    </div>
-
-                    <h3 className="text-base font-extrabold text-neutral-900 dark:text-white line-clamp-1 mb-1">
-                      <Link href={`/projects/${p.id}`} className="hover:text-indigo-500 transition-colors">
-                        {p.title}
-                      </Link>
-                    </h3>
-                    <p className="text-xs text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-relaxed mb-3">
-                      {p.short_description}
-                    </p>
-
-                    <div className="flex flex-wrap gap-1">
-                      {p.tech_stack.slice(0, 3).map((t) => (
-                        <span
-                          key={t}
-                          className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300 rounded-md text-[10px] font-semibold"
-                        >
-                          {t}
+                    <SpotlightCard className="flex-1 flex flex-col justify-between bg-neutral-900/90 border border-neutral-800 rounded-3xl hover:border-indigo-500/60 hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1 transition-all overflow-hidden ring-1 ring-white/5 group">
+                      <div className="p-5 pb-3 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg text-[10px] font-black text-white font-mono shadow-sm">
+                            #{String(idx + 1).padStart(2, "0")}
+                          </span>
+                          <span className="text-xs font-bold text-neutral-400 flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-indigo-400" />
+                            {formatDate(p.start_date)}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                          {p.status.replace("_", " ")}
                         </span>
-                      ))}
-                    </div>
-                  </SpotlightCard>
-                </div>
-              ))}
+                      </div>
+
+                      {/* Visual Banner */}
+                      <div className="relative aspect-video w-full overflow-hidden bg-neutral-950 border-y border-neutral-800/80">
+                        {cover ? (
+                          <img
+                            src={cover}
+                            alt={p.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <TechStackPlaceholder techStack={p.tech_stack} title={p.title} className="h-full" />
+                        )}
+                      </div>
+
+                      <div className="p-5 space-y-2 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-base font-extrabold text-white group-hover:text-indigo-400 transition-colors line-clamp-1">
+                            <Link href={`/projects/${p.id}`} className="hover:text-indigo-400 transition-colors">
+                              {p.title}
+                            </Link>
+                          </h3>
+                          <p className="text-xs text-neutral-300 line-clamp-2 leading-relaxed mt-1">
+                            {p.short_description}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 border-t border-neutral-800/80 flex items-center justify-between">
+                          <div className="flex flex-wrap gap-1">
+                            {p.tech_stack.slice(0, 2).map((t) => (
+                              <span
+                                key={t}
+                                className="px-2 py-0.5 bg-neutral-950 text-indigo-300 rounded text-[10px] font-semibold border border-neutral-800"
+                              >
+                                {t}
+                              </span>
+                            ))}
+                          </div>
+                          <Link href={`/projects/${p.id}`} className="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
+                            <span>Details</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    </SpotlightCard>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Serpentine Curve indicator at the bottom right */}
-            <div className="hidden md:flex items-center justify-end mt-4 pr-12 gap-2 text-xs font-mono text-indigo-500">
+            <div className="hidden md:flex items-center justify-end mt-4 pr-12 gap-2 text-xs font-mono text-indigo-400">
               <span>S-Curve wraps to next row</span>
-              <svg className="w-8 h-8" viewBox="0 0 32 32" fill="none">
-                <path d="M 0,8 C 24,8 24,28 0,28" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" />
+              <svg className="w-8 h-8 overflow-visible" viewBox="0 0 32 32" fill="none">
+                <path d="M 0,8 C 28,8 28,28 0,28" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" />
+                <circle cx="20" cy="18" r="3" fill="#a855f7" className="animate-ping" />
               </svg>
             </div>
           </div>
